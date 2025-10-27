@@ -38,7 +38,9 @@ export interface UserLogin {
 export interface Role {
   id: number
   name: string
+  code: string
   description?: string
+  is_active: boolean
   created_at: string
   updated_at: string
   permissions: Permission[]
@@ -46,22 +48,74 @@ export interface Role {
 
 export interface RoleCreate {
   name: string
+  code: string
   description?: string
+  is_active?: boolean
   permission_ids?: number[]
+}
+
+export interface RoleUpdate {
+  name?: string
+  code?: string
+  description?: string
+  is_active?: boolean
+  permission_ids?: number[]
+}
+
+export interface RoleListResponse {
+  items: Role[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
 }
 
 // 权限相关类型
 export interface Permission {
   id: number
   name: string
+  code: string
   description?: string
+  permission_type: 'menu' | 'api' | 'button'
+  module?: string
+  api_path?: string
+  api_method?: string
+  menu_id?: number
+  is_active: boolean
   created_at: string
   updated_at: string
 }
 
 export interface PermissionCreate {
   name: string
+  code: string
   description?: string
+  permission_type: 'menu' | 'api' | 'button'
+  module?: string
+  api_path?: string
+  api_method?: string
+  menu_id?: number
+  is_active?: boolean
+}
+
+export interface PermissionUpdate {
+  name?: string
+  code?: string
+  description?: string
+  permission_type?: 'menu' | 'api' | 'button'
+  module?: string
+  api_path?: string
+  api_method?: string
+  menu_id?: number
+  is_active?: boolean
+}
+
+export interface PermissionListResponse {
+  items: Permission[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
 }
 
 // 认证相关类型
@@ -124,7 +178,55 @@ export interface FormErrors {
   [key: string]: string | undefined
 }
 
-// 菜单项类型
+// 菜单相关类型
+export interface Menu {
+  id: number
+  name: string
+  title: string
+  path?: string
+  icon?: string
+  component?: string
+  parent_id?: number
+  sort_order: number
+  menu_type: string
+  permission_code?: string
+  is_hidden: boolean
+  is_active: boolean
+  description?: string
+  created_at: string
+  updated_at: string
+  children?: Menu[]
+}
+
+export interface MenuCreate {
+  name: string
+  path?: string
+  icon?: string
+  component?: string
+  parent_id?: number
+  sort_order?: number
+  is_active?: boolean
+}
+
+export interface MenuUpdate {
+  name?: string
+  path?: string
+  icon?: string
+  component?: string
+  parent_id?: number
+  sort_order?: number
+  is_active?: boolean
+}
+
+export interface MenuListResponse {
+  items: Menu[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
+// 菜单项类型（用于导航）
 export interface MenuItem {
   key: string
   label: string

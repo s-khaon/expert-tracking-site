@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Layout as AntLayout, Menu, Dropdown, Avatar, Button, message } from 'antd'
+import { useState, useEffect } from 'react'
+import { Layout as AntLayout, Menu, Dropdown, Avatar, Button, message, Spin } from 'antd'
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -8,10 +8,15 @@ import {
   TeamOutlined,
   LogoutOutlined,
   SettingOutlined,
+  SafetyOutlined,
+  ControlOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useQuery } from 'react-query'
 import { useAuthStore } from '../../store/authStore'
-import type { MenuItem } from '../../types'
+import { menuService } from '../../services/menuService'
+import type { MenuItem, Menu as MenuType } from '../../types'
 
 const { Header, Sider, Content } = AntLayout
 
@@ -25,37 +30,44 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation()
   const { user, logout } = useAuthStore()
 
-  // 菜单项配置
-  const menuItems: MenuItem[] = [
+  // 获取用户可访问的菜单树
+  const { data: userMenus = [], isLoading: menusLoading } = useQuery(
+    ['userMenuTree'],
+    () => menuService.getCurrentUserMenuTree(),
     {
-      key: '/dashboard',
-      label: '仪表板',
-      icon: <DashboardOutlined />,
-      path: '/dashboard',
-    },
-    {
-      key: '/experts',
-      label: '达人管理',
-      icon: <TeamOutlined />,
-      path: '/experts',
-    },
-    {
-      key: '/users',
-      label: '用户管理',
-      icon: <UserOutlined />,
-      path: '/users',
-      permission: 'user:read',
-    },
-  ]
+      enabled: !!user,
+      staleTime: 5 * 60 * 1000, // 5分钟缓存
+    }
+  )
 
-  // 过滤有权限的菜单项
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (!item.permission) return true
-    // 这里可以根据用户权限进行过滤
-    return user?.is_superuser || user?.roles?.some(role => 
-      role.permissions?.some(permission => permission.name === item.permission)
-    )
-  })
+  // 图标映射
+  const iconMap: Record<string, React.ReactNode> = {
+    'DashboardOutlined': <DashboardOutlined />,
+    'UserOutlined': <UserOutlined />,
+    'TeamOutlined': <TeamOutlined />,
+    'SafetyOutlined': <SafetyOutlined />,
+    'ControlOutlined': <ControlOutlined />,
+    'AppstoreOutlined': <AppstoreOutlined />,
+    'SettingOutlined': <SettingOutlined />,
+  }
+
+  // 转换菜单数据为Ant Design Menu组件需要的格式
+  const convertMenusToAntdFormat = (menus: MenuType[]): MenuItem[] => {
+    return menus
+      .filter(menu => menu.menu_type === 'menu' && !menu.is_hidden && menu.path)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map(menu => ({
+        key: menu.path!,
+        label: menu.title,
+        icon: iconMap[menu.icon || ''] || <AppstoreOutlined />,
+        path: menu.path!,
+        children: menu.children && menu.children.length > 0 
+          ? convertMenusToAntdFormat(menu.children)
+          : undefined,
+      }))
+  }
+
+  const menuItems = convertMenusToAntdFormat(userMenus)
 
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key)
@@ -103,16 +115,27 @@ const Layout = ({ children }: LayoutProps) => {
             {collapsed ? 'ETS' : '达人跟进系统'}
           </div>
         </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={filteredMenuItems.map(item => ({
-            key: item.key,
-            icon: item.icon,
-            label: item.label,
-          }))}
-          onClick={handleMenuClick}
-        />
+        {menusLoading ? (
+          <div style={{ padding: 20, textAlign: 'center' }}>
+            <Spin />
+          </div>
+        ) : (
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems.map(item => ({
+              key: item.key,
+              icon: item.icon,
+              label: item.label,
+              children: item.children?.map(child => ({
+                key: child.key,
+                icon: child.icon,
+                label: child.label,
+              })),
+            }))}
+            onClick={handleMenuClick}
+          />
+        )}
       </Sider>
       
       <AntLayout>

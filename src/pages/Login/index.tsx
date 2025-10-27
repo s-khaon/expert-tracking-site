@@ -1,9 +1,9 @@
-import { Form, Input, Button, message } from 'antd'
-import { UserOutlined, LockOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
-import { useMutation } from 'react-query'
-import { useAuthStore } from '@store/authStore'
+import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import { authService } from '@services/authService'
+import { useAuthStore } from '@store/authStore'
+import { Button, Form, Input, message } from 'antd'
+import { useMutation } from 'react-query'
+import { useNavigate } from 'react-router-dom'
 import type { UserLogin } from '../../types'
 
 const Login = () => {
@@ -12,7 +12,7 @@ const Login = () => {
   const { login } = useAuthStore()
 
   const loginMutation = useMutation(authService.login, {
-    onSuccess: (data) => {
+    onSuccess: data => {
       login(data.user, data.token)
       message.success('登录成功')
       navigate('/dashboard')
@@ -30,13 +30,7 @@ const Login = () => {
     <div className="login-container">
       <div className="login-form">
         <h1 className="login-title">达人跟进系统</h1>
-        <Form
-          form={form}
-          name="login"
-          onFinish={handleSubmit}
-          autoComplete="off"
-          size="large"
-        >
+        <Form form={form} name="login" onFinish={handleSubmit} autoComplete="off" size="large">
           <Form.Item
             name="username"
             rules={[
@@ -44,11 +38,7 @@ const Login = () => {
               { min: 3, message: '用户名至少3个字符' },
             ]}
           >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="用户名"
-              autoComplete="username"
-            />
+            <Input prefix={<UserOutlined />} placeholder="用户名" autoComplete="username" />
           </Form.Item>
 
           <Form.Item

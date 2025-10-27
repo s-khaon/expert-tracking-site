@@ -1,5 +1,5 @@
+import type { PaginatedResponse, TableParams, User, UserCreate, UserUpdate } from '../types'
 import { apiRequest } from './api'
-import type { User, UserCreate, UserUpdate, PaginatedResponse, TableParams } from '../types'
 
 export const userService = {
   // 获取用户列表
@@ -10,8 +10,8 @@ export const userService = {
     if (params?.search) queryParams.append('search', params.search)
     if (params?.sort_by) queryParams.append('sort_by', params.sort_by)
     if (params?.sort_order) queryParams.append('sort_order', params.sort_order)
-    
-    const url = `/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+
+    const url = queryParams.toString() ? `/users/?${queryParams.toString()}` : '/users/'
     return apiRequest.get(url)
   },
 
