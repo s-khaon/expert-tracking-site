@@ -10,7 +10,7 @@ export interface RoleQueryParams {
 export const roleService = {
   // 获取角色列表
   getRoles: (params?: RoleQueryParams): Promise<RoleListResponse> =>
-    apiRequest.get('/roles/', { params }),
+    apiRequest.get('/roles', { params }),
 
   // 获取单个角色
   getRole: (id: number): Promise<Role> =>

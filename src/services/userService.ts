@@ -11,7 +11,7 @@ export const userService = {
     if (params?.sort_by) queryParams.append('sort_by', params.sort_by)
     if (params?.sort_order) queryParams.append('sort_order', params.sort_order)
 
-    const url = queryParams.toString() ? `/users/?${queryParams.toString()}` : '/users/'
+    const url = queryParams.toString() ? `/users?${queryParams.toString()}` : '/users'
     return apiRequest.get(url)
   },
 
@@ -22,7 +22,7 @@ export const userService = {
 
   // 创建用户
   createUser: async (userData: UserCreate): Promise<User> => {
-    return apiRequest.post('/users/', userData)
+    return apiRequest.post('/users', userData)
   },
 
   // 更新用户
