@@ -22,7 +22,7 @@ export const userService = {
 
   // 创建用户
   createUser: async (userData: UserCreate): Promise<User> => {
-    return apiRequest.post('/users', userData)
+    return apiRequest.post('/users/', userData)
   },
 
   // 更新用户
