@@ -54,7 +54,13 @@ const Layout = ({ children }: LayoutProps) => {
   // 转换菜单数据为Ant Design Menu组件需要的格式
   const convertMenusToAntdFormat = (menus: MenuType[]): MenuItem[] => {
     return menus
-      .filter(menu => menu.menu_type === 'menu' && !menu.is_hidden && menu.path)
+      .filter(menu => {
+        // 显示条件：菜单类型为'menu'且未隐藏，并且满足以下条件之一：
+        // 1. 有path（叶子菜单）
+        // 2. 有子菜单（父级菜单，即使没有path也要显示）
+        return menu.menu_type === 'menu' && !menu.is_hidden && 
+               (menu.path || (menu.children && menu.children.length > 0));
+      })
       .sort((a, b) => a.sort_order - b.sort_order)
       .map(menu => ({
         key: menu.path!,

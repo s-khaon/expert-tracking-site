@@ -17,7 +17,7 @@ export interface PermissionQueryParams {
 export const permissionService = {
   // 获取权限列表
   getPermissions: (params?: PermissionQueryParams): Promise<PermissionListResponse> =>
-    apiRequest.get('/permissions', { params }),
+    apiRequest.get('/permissions/', { params }),
 
   // 获取单个权限
   getPermission: (id: number): Promise<Permission> =>
@@ -25,7 +25,7 @@ export const permissionService = {
 
   // 创建权限
   createPermission: (data: PermissionCreate): Promise<Permission> =>
-    apiRequest.post('/permissions', data),
+    apiRequest.post('/permissions/', data),
 
   // 更新权限
   updatePermission: (id: number, data: PermissionUpdate): Promise<Permission> =>
