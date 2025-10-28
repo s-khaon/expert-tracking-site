@@ -6,7 +6,7 @@ export const userService = {
   getUsers: async (params?: TableParams): Promise<PaginatedResponse<User>> => {
     const queryParams = new URLSearchParams()
     if (params?.page) queryParams.append('page', params.page.toString())
-    if (params?.size) queryParams.append('size', params.size.toString())
+    if (params?.page_size) queryParams.append('page_size', params.page_size.toString())
     if (params?.search) queryParams.append('search', params.search)
     if (params?.sort_by) queryParams.append('sort_by', params.sort_by)
     if (params?.sort_order) queryParams.append('sort_order', params.sort_order)

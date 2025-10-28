@@ -34,6 +34,8 @@ export interface UserLogin {
   password: string
 }
 
+export interface UserListResponse extends PaginatedResponse<User> {}
+
 // 角色相关类型
 export interface Role {
   id: number
@@ -62,13 +64,7 @@ export interface RoleUpdate {
   permission_ids?: number[]
 }
 
-export interface RoleListResponse {
-  items: Role[]
-  total: number
-  page: number
-  page_size: number
-  pages: number
-}
+export interface RoleListResponse extends PaginatedResponse<Role> {}
 
 // 权限相关类型
 export interface Permission {
@@ -110,13 +106,7 @@ export interface PermissionUpdate {
   is_active?: boolean
 }
 
-export interface PermissionListResponse {
-  items: Permission[]
-  total: number
-  page: number
-  page_size: number
-  pages: number
-}
+export interface PermissionListResponse extends PaginatedResponse<Permission> {}
 
 // 认证相关类型
 export interface Token {
@@ -137,18 +127,28 @@ export interface ApiResponse<T> {
   success: boolean
 }
 
+// 统一的分页响应类型（与后端保持一致）
 export interface PaginatedResponse<T> {
   items: T[]
   total: number
   page: number
-  size: number
+  page_size: number
   pages: number
 }
 
-// 表格相关类型
+// 统一的分页请求参数类型（与后端保持一致）
+export interface PaginationParams {
+  page?: number
+  page_size?: number
+  search?: string
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+}
+
+// 表格参数类型（前端组件使用）
 export interface TableParams {
   page?: number
-  size?: number
+  page_size?: number
   search?: string
   sort_by?: string
   sort_order?: 'asc' | 'desc'
@@ -218,13 +218,7 @@ export interface MenuUpdate {
   is_active?: boolean
 }
 
-export interface MenuListResponse {
-  items: Menu[]
-  total: number
-  page: number
-  page_size: number
-  pages: number
-}
+export interface MenuListResponse extends PaginatedResponse<Menu> {}
 
 // 菜单项类型（用于导航）
 export interface MenuItem {

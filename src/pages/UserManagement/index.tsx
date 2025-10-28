@@ -1,20 +1,9 @@
+import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { Button, Form, Input, message, Modal, Popconfirm, Space, Switch, Table, Tag } from 'antd'
 import { useState } from 'react'
-import {
-  Table,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Modal,
-  Form,
-  Switch,
-  message,
-  Popconfirm,
-} from 'antd'
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { userService } from '../../services/userService'
-import type { User, UserCreate, UserUpdate, TableParams } from '../../types'
+import type { TableParams, User, UserCreate, UserUpdate } from '../../types'
 
 const { Search } = Input
 
@@ -25,7 +14,7 @@ const UserManagement = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [tableParams, setTableParams] = useState<TableParams>({
     page: 1,
-    size: 10,
+    page_size: 10,
   })
 
   // 获取用户列表
@@ -138,7 +127,7 @@ const UserManagement = () => {
     setTableParams({
       ...tableParams,
       page: pagination.current,
-      size: pagination.pageSize,
+      page_size: pagination.pageSize,
     })
   }
 
@@ -181,9 +170,7 @@ const UserManagement = () => {
       dataIndex: 'is_superuser',
       key: 'is_superuser',
       render: (isSuperuser: boolean) => (
-        <Tag color={isSuperuser ? 'red' : 'default'}>
-          {isSuperuser ? '是' : '否'}
-        </Tag>
+        <Tag color={isSuperuser ? 'red' : 'default'}>{isSuperuser ? '是' : '否'}</Tag>
       ),
     },
     {
@@ -197,11 +184,7 @@ const UserManagement = () => {
       key: 'action',
       render: (_: any, record: User) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
+          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
           <Popconfirm
@@ -252,12 +235,11 @@ const UserManagement = () => {
         loading={isLoading}
         pagination={{
           current: tableParams.page,
-          pageSize: tableParams.size,
+          pageSize: tableParams.page_size,
           total: usersData?.total || 0,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total, range) =>
-            `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+          showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
         }}
         onChange={handleTableChange}
         rowKey="id"
@@ -274,12 +256,7 @@ const UserManagement = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          autoComplete="off"
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit} autoComplete="off">
           <Form.Item
             name="username"
             label="用户名"
