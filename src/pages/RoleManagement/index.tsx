@@ -1,34 +1,27 @@
-import React, { useState, useEffect } from 'react'
+import { DeleteOutlined, EditOutlined, PlusOutlined, SettingOutlined } from '@ant-design/icons'
 import {
-  Table,
   Button,
-  Space,
-  Modal,
+  Card,
+  Col,
+  Divider,
   Form,
   Input,
-  Switch,
   message,
+  Modal,
   Popconfirm,
-  Card,
   Row,
-  Col,
+  Space,
+  Switch,
+  Table,
   Tag,
-  Transfer,
+  Tree,
 } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { TransferDirection } from 'antd/es/transfer'
-import { roleService } from '../../services/roleService'
+import type { DataNode } from 'antd/es/tree'
+import React, { useEffect, useState } from 'react'
 import { menuService } from '../../services/menuService'
-import type { Role, RoleCreate, RoleUpdate, Menu } from '../../types'
-
-// const { TabPane } = Tabs // Removed unused variable
-
-interface TransferItem {
-  key: string
-  title: string
-  description?: string
-}
+import { roleService } from '../../services/roleService'
+import type { Menu, Role, RoleCreate, RoleUpdate } from '../../types'
 
 const RoleManagement: React.FC = () => {
   const [roles, setRoles] = useState<Role[]>([])
@@ -45,9 +38,9 @@ const RoleManagement: React.FC = () => {
     total: 0,
   })
 
-  // 菜单穿梭框相关状态
-  const [targetKeys, setTargetKeys] = useState<React.Key[]>([])
-  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([])
+  // 菜单树相关状态
+  const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([])
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
 
   // 获取角色列表
   const fetchRoles = async (page = 1, pageSize = 10) => {
@@ -70,14 +63,11 @@ const RoleManagement: React.FC = () => {
     }
   }
 
-  // 获取菜单列表
+  // 获取菜单树
   const fetchMenus = async () => {
     try {
-      const response = await menuService.getMenus({
-        skip: 0,
-        limit: 1000, // 获取所有菜单
-      })
-      setMenus(response.items)
+      const response = await menuService.getMenuTree(true)
+      setMenus(response)
     } catch (error) {
       message.error('获取菜单列表失败')
     }
@@ -145,7 +135,10 @@ const RoleManagement: React.FC = () => {
     setMenuModalVisible(true)
     try {
       const roleMenus = await roleService.getRoleMenus(role.id)
-      setTargetKeys(roleMenus.map(m => m.id.toString()))
+      setCheckedKeys(roleMenus.map(m => m.id.toString()))
+      // 默认展开所有节点
+      const allKeys = getAllMenuKeys(menus)
+      setExpandedKeys(allKeys)
     } catch (error) {
       message.error('获取角色菜单失败')
     }
@@ -155,26 +148,44 @@ const RoleManagement: React.FC = () => {
   const closeMenuModal = () => {
     setMenuModalVisible(false)
     setSelectedRole(null)
-    setTargetKeys([])
-    setSelectedKeys([])
+    setCheckedKeys([])
+    setExpandedKeys([])
   }
 
-  // 处理权限穿梭框变化
-  const handleTransferChange = (newTargetKeys: React.Key[], _direction: TransferDirection, _moveKeys: React.Key[]) => {
-    setTargetKeys(newTargetKeys)
+  // 获取所有菜单的key
+  const getAllMenuKeys = (menuList: Menu[]): React.Key[] => {
+    const keys: React.Key[] = []
+    const traverse = (items: Menu[]) => {
+      items.forEach(item => {
+        keys.push(item.id.toString())
+        if (item.children && item.children.length > 0) {
+          traverse(item.children)
+        }
+      })
+    }
+    traverse(menuList)
+    return keys
   }
 
-  // 处理权限穿梭框选择变化
-  const handleTransferSelectChange = (sourceSelectedKeys: React.Key[], targetSelectedKeys: React.Key[]) => {
-    setSelectedKeys([...sourceSelectedKeys, ...targetSelectedKeys])
+  // 处理树节点选择变化
+  const handleTreeCheck = (
+    checkedKeysValue: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }
+  ) => {
+    const keys = Array.isArray(checkedKeysValue) ? checkedKeysValue : checkedKeysValue.checked
+    setCheckedKeys(keys)
+  }
+
+  // 处理树节点展开变化
+  const handleTreeExpand = (expandedKeysValue: React.Key[]) => {
+    setExpandedKeys(expandedKeysValue)
   }
 
   // 保存菜单分配
   const handleSaveMenus = async () => {
     if (!selectedRole) return
-    
+
     try {
-      const menuIds = targetKeys.map(key => parseInt(key.toString()))
+      const menuIds = checkedKeys.map(key => parseInt(key.toString()))
       await roleService.assignMenus(selectedRole.id, menuIds)
       message.success('菜单分配成功')
       closeMenuModal()
@@ -183,12 +194,15 @@ const RoleManagement: React.FC = () => {
     }
   }
 
-  // 准备穿梭框数据
-  const transferData: TransferItem[] = menus.map(menu => ({
-    key: menu.id.toString(),
-    title: menu.name,
-    description: menu.description || menu.path,
-  }))
+  // 将菜单数据转换为树形数据
+  const convertToTreeData = (menuList: Menu[]): DataNode[] => {
+    return menuList.map(menu => ({
+      title: menu.title,
+      key: menu.id.toString(),
+      children:
+        menu.children && menu.children.length > 0 ? convertToTreeData(menu.children) : undefined,
+    }))
+  }
 
   // 表格列定义
   const columns: ColumnsType<Role> = [
@@ -218,9 +232,7 @@ const RoleManagement: React.FC = () => {
       dataIndex: 'is_active',
       key: 'is_active',
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? '启用' : '禁用'}
-        </Tag>
+        <Tag color={isActive ? 'green' : 'red'}>{isActive ? '启用' : '禁用'}</Tag>
       ),
     },
     {
@@ -234,18 +246,10 @@ const RoleManagement: React.FC = () => {
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<SettingOutlined />}
-            onClick={() => openMenuModal(record)}
-          >
+          <Button type="link" icon={<SettingOutlined />} onClick={() => openMenuModal(record)}>
             菜单分配
           </Button>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => openModal(record)}
-          >
+          <Button type="link" icon={<EditOutlined />} onClick={() => openModal(record)}>
             编辑
           </Button>
           <Popconfirm
@@ -286,7 +290,7 @@ const RoleManagement: React.FC = () => {
               ...pagination,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total) => `共 ${total} 条记录`,
+              showTotal: total => `共 ${total} 条记录`,
             }}
             onChange={handleTableChange}
           />
@@ -350,28 +354,29 @@ const RoleManagement: React.FC = () => {
         open={menuModalVisible}
         onCancel={closeMenuModal}
         onOk={handleSaveMenus}
-        width={800}
+        width={600}
         okText="保存"
         cancelText="取消"
       >
-        <Transfer
-          dataSource={transferData}
-          titles={['可用菜单', '已分配菜单']}
-          targetKeys={targetKeys}
-          selectedKeys={selectedKeys}
-          onChange={handleTransferChange}
-          onSelectChange={handleTransferSelectChange}
-          render={item => item.title}
-          listStyle={{
-            width: 350,
-            height: 400,
-          }}
-          showSearch
-          filterOption={(inputValue, item) =>
-            item.title.indexOf(inputValue) !== -1 ||
-            !!(item.description && item.description.indexOf(inputValue) !== -1)
-          }
-        />
+        <div style={{ padding: '16px 0' }}>
+          <h4>请选择要分配给该角色的菜单：</h4>
+          <Divider />
+          <Tree
+            checkable
+            checkedKeys={checkedKeys}
+            expandedKeys={expandedKeys}
+            onCheck={handleTreeCheck}
+            onExpand={handleTreeExpand}
+            treeData={convertToTreeData(menus)}
+            style={{
+              maxHeight: 400,
+              overflow: 'auto',
+              border: '1px solid #d9d9d9',
+              borderRadius: '6px',
+              padding: '8px',
+            }}
+          />
+        </div>
       </Modal>
     </Card>
   )

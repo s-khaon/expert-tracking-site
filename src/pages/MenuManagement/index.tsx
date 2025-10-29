@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from 'react'
 import {
-  Table,
+  DeleteOutlined,
+  EditOutlined,
+  FileOutlined,
+  FolderOutlined,
+  PlusOutlined,
+} from '@ant-design/icons'
+import {
   Button,
-  Space,
-  Modal,
+  Card,
+  Col,
   Form,
   Input,
   InputNumber,
-  Switch,
   message,
+  Modal,
   Popconfirm,
-  Card,
   Row,
-  Col,
+  Space,
+  Switch,
+  Table,
   Tag,
   TreeSelect,
 } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
+import React, { useEffect, useState } from 'react'
 import { menuService } from '../../services/menuService'
 import type { Menu, MenuCreate, MenuUpdate } from '../../types'
 
@@ -96,18 +102,6 @@ const MenuManagement: React.FC = () => {
     }
   }
 
-  // 将菜单树转换为平铺列表用于表格显示
-  const flattenMenus = (menus: Menu[], level = 0): (Menu & { level: number })[] => {
-    const result: (Menu & { level: number })[] = []
-    menus.forEach(menu => {
-      result.push({ ...menu, level })
-      if (menu.children && menu.children.length > 0) {
-        result.push(...flattenMenus(menu.children, level + 1))
-      }
-    })
-    return result
-  }
-
   // 将菜单树转换为TreeSelect数据
   const convertToTreeData = (menus: Menu[]): any[] => {
     return menus.map(menu => ({
@@ -118,10 +112,22 @@ const MenuManagement: React.FC = () => {
     }))
   }
 
-  const flatMenus = flattenMenus(menus)
+  // 将菜单数据转换为表格树形数据
+  const convertToTableTreeData = (menus: Menu[]): any[] => {
+    return menus.map(menu => ({
+      ...menu,
+      key: menu.id,
+      children:
+        menu.children && menu.children.length > 0
+          ? convertToTableTreeData(menu.children)
+          : undefined,
+    }))
+  }
+
+  const tableTreeData = convertToTableTreeData(menus)
 
   // 表格列定义
-  const columns: ColumnsType<Menu & { level: number }> = [
+  const columns: ColumnsType<Menu> = [
     {
       title: 'ID',
       dataIndex: 'id',
@@ -130,13 +136,23 @@ const MenuManagement: React.FC = () => {
     },
     {
       title: '菜单名称',
-      dataIndex: 'name',
+      dataIndex: 'title',
       key: 'name',
-      render: (text: string, record) => (
-        <span style={{ paddingLeft: record.level * 20 }}>
-          {record.level > 0 && '└─ '}
-          {text}
-        </span>
+      render: (text: string, record: any) => (
+        <Space>
+          {record.children && record.children.length > 0 ? (
+            <FolderOutlined style={{ color: '#1890ff' }} />
+          ) : (
+            <FileOutlined style={{ color: '#52c41a' }} />
+          )}
+          <span
+            style={{
+              fontWeight: record.children && record.children.length > 0 ? 'bold' : 'normal',
+            }}
+          >
+            {text}
+          </span>
+        </Space>
       ),
     },
     {
@@ -160,9 +176,7 @@ const MenuManagement: React.FC = () => {
       dataIndex: 'is_active',
       key: 'is_active',
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? '启用' : '禁用'}
-        </Tag>
+        <Tag color={isActive ? 'green' : 'red'}>{isActive ? '启用' : '禁用'}</Tag>
       ),
     },
     {
@@ -176,11 +190,7 @@ const MenuManagement: React.FC = () => {
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => openModal(record)}
-          >
+          <Button type="link" icon={<EditOutlined />} onClick={() => openModal(record)}>
             编辑
           </Button>
           <Popconfirm
@@ -214,10 +224,14 @@ const MenuManagement: React.FC = () => {
         <Col span={24}>
           <Table
             columns={columns}
-            dataSource={flatMenus}
+            dataSource={tableTreeData}
             rowKey="id"
             loading={loading}
             pagination={false}
+            expandable={{
+              defaultExpandAllRows: false,
+              indentSize: 20,
+            }}
           />
         </Col>
       </Row>
@@ -272,11 +286,7 @@ const MenuManagement: React.FC = () => {
             label="排序"
             rules={[{ required: true, message: '请输入排序值' }]}
           >
-            <InputNumber
-              placeholder="请输入排序值"
-              min={0}
-              style={{ width: '100%' }}
-            />
+            <InputNumber placeholder="请输入排序值" min={0} style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item name="is_active" label="状态" valuePropName="checked">
