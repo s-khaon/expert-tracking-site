@@ -45,7 +45,7 @@ export interface Role {
   is_active: boolean
   created_at: string
   updated_at: string
-  permissions: Permission[]
+  menus: Menu[]
 }
 
 export interface RoleCreate {
@@ -53,7 +53,7 @@ export interface RoleCreate {
   code: string
   description?: string
   is_active?: boolean
-  permission_ids?: number[]
+  menu_ids?: number[]
 }
 
 export interface RoleUpdate {
@@ -61,7 +61,7 @@ export interface RoleUpdate {
   code?: string
   description?: string
   is_active?: boolean
-  permission_ids?: number[]
+  menu_ids?: number[]
 }
 
 export interface RoleListResponse extends PaginatedResponse<Role> {}
@@ -188,8 +188,6 @@ export interface Menu {
   component?: string
   parent_id?: number
   sort_order: number
-  menu_type: string
-  permission_code?: string
   is_hidden: boolean
   is_active: boolean
   description?: string

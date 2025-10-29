@@ -1,28 +1,20 @@
-import React, { useState } from 'react'
 import {
-  Layout as AntLayout,
-  Menu,
-  Button,
-  Dropdown,
-  Avatar,
-  Spin,
-  message,
-} from 'antd'
-import {
+  AppstoreOutlined,
+  ControlOutlined,
+  DashboardOutlined,
+  LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  DashboardOutlined,
-  TeamOutlined,
   SafetyOutlined,
-  ControlOutlined,
-  AppstoreOutlined,
   SettingOutlined,
+  TeamOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { Layout as AntLayout, Avatar, Button, Dropdown, Menu, Spin, message } from 'antd'
+import React, { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
-import type { Menu as MenuType, MenuItem } from '../../types'
+import type { MenuItem, Menu as MenuType } from '../../types'
 
 const { Header, Sider, Content } = AntLayout
 
@@ -32,11 +24,7 @@ interface LayoutProps {
   menusLoading: boolean
 }
 
-const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  userMenus, 
-  menusLoading 
-}) => {
+const Layout: React.FC<LayoutProps> = ({ children, userMenus, menusLoading }) => {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -44,13 +32,13 @@ const Layout: React.FC<LayoutProps> = ({
 
   // 图标映射
   const iconMap: Record<string, React.ReactNode> = {
-    'DashboardOutlined': <DashboardOutlined />,
-    'UserOutlined': <UserOutlined />,
-    'TeamOutlined': <TeamOutlined />,
-    'SafetyOutlined': <SafetyOutlined />,
-    'ControlOutlined': <ControlOutlined />,
-    'AppstoreOutlined': <AppstoreOutlined />,
-    'SettingOutlined': <SettingOutlined />,
+    DashboardOutlined: <DashboardOutlined />,
+    UserOutlined: <UserOutlined />,
+    TeamOutlined: <TeamOutlined />,
+    SafetyOutlined: <SafetyOutlined />,
+    ControlOutlined: <ControlOutlined />,
+    AppstoreOutlined: <AppstoreOutlined />,
+    SettingOutlined: <SettingOutlined />,
   }
 
   // 转换菜单数据为Ant Design Menu组件需要的格式
@@ -60,8 +48,7 @@ const Layout: React.FC<LayoutProps> = ({
         // 显示条件：菜单类型为'menu'且未隐藏，并且满足以下条件之一：
         // 1. 有path（叶子菜单）
         // 2. 有子菜单（父级菜单，即使没有path也要显示）
-        return menu.menu_type === 'menu' && !menu.is_hidden && 
-               (menu.path || (menu.children && menu.children.length > 0));
+        return !menu.is_hidden && (menu.path || (menu.children && menu.children.length > 0))
       })
       .sort((a, b) => a.sort_order - b.sort_order)
       .map(menu => ({
@@ -69,9 +56,10 @@ const Layout: React.FC<LayoutProps> = ({
         label: menu.title,
         icon: iconMap[menu.icon || ''] || <AppstoreOutlined />,
         path: menu.path!,
-        children: menu.children && menu.children.length > 0 
-          ? convertMenusToAntdFormat(menu.children)
-          : undefined,
+        children:
+          menu.children && menu.children.length > 0
+            ? convertMenusToAntdFormat(menu.children)
+            : undefined,
       }))
   }
 
@@ -111,13 +99,7 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <AntLayout className="layout-container">
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        className="layout-sider"
-        width={240}
-      >
+      <Sider trigger={null} collapsible collapsed={collapsed} className="layout-sider" width={240}>
         <div className="flex-center" style={{ height: 64, padding: '0 16px' }}>
           <div className="logo" style={{ color: '#1890ff', fontSize: collapsed ? 16 : 18 }}>
             {collapsed ? 'ETS' : '达人跟进系统'}
@@ -145,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({
           />
         )}
       </Sider>
-      
+
       <AntLayout>
         <Header className="layout-header">
           <div className="header-left">
@@ -156,13 +138,9 @@ const Layout: React.FC<LayoutProps> = ({
               style={{ fontSize: 16, width: 64, height: 64 }}
             />
           </div>
-          
+
           <div className="header-right">
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="bottomRight"
-              arrow
-            >
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
               <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Avatar icon={<UserOutlined />} />
                 <span>{user?.full_name || user?.username}</span>
@@ -170,10 +148,8 @@ const Layout: React.FC<LayoutProps> = ({
             </Dropdown>
           </div>
         </Header>
-        
-        <Content className="layout-content">
-          {children}
-        </Content>
+
+        <Content className="layout-content">{children}</Content>
       </AntLayout>
     </AntLayout>
   )

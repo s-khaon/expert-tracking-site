@@ -1,5 +1,5 @@
 import { apiRequest } from './api'
-import type { Role, RoleCreate, RoleUpdate, RoleListResponse, Permission } from '../types'
+import type { Role, RoleCreate, RoleUpdate, RoleListResponse, Menu } from '../types'
 
 export interface RoleQueryParams {
   skip?: number
@@ -41,13 +41,13 @@ export const roleService = {
     await apiRequest.delete(`/users/${userId}/roles`, { data: { role_ids: roleIds } })
   },
 
-  // 获取角色权限
-  getRolePermissions: async (roleId: number): Promise<Permission[]> => {
-    return await apiRequest.get<Permission[]>(`/roles/${roleId}/permissions`)
+  // 获取角色菜单
+  getRoleMenus: async (roleId: number): Promise<Menu[]> => {
+    return await apiRequest.get<Menu[]>(`/roles/${roleId}/menus`)
   },
 
-  // 分配权限给角色
-  assignPermissions: async (roleId: number, permissionIds: number[]): Promise<void> => {
-    await apiRequest.post(`/roles/${roleId}/permissions`, { permission_ids: permissionIds })
+  // 分配菜单给角色
+  assignMenus: async (roleId: number, menuIds: number[]): Promise<void> => {
+    await apiRequest.post(`/roles/${roleId}/menus`, { menu_ids: menuIds })
   },
 }

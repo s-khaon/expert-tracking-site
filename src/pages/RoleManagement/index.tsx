@@ -19,8 +19,8 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@an
 import type { ColumnsType } from 'antd/es/table'
 import type { TransferDirection } from 'antd/es/transfer'
 import { roleService } from '../../services/roleService'
-import { permissionService } from '../../services/permissionService'
-import type { Role, RoleCreate, RoleUpdate, Permission } from '../../types'
+import { menuService } from '../../services/menuService'
+import type { Role, RoleCreate, RoleUpdate, Menu } from '../../types'
 
 // const { TabPane } = Tabs // Removed unused variable
 
@@ -32,10 +32,10 @@ interface TransferItem {
 
 const RoleManagement: React.FC = () => {
   const [roles, setRoles] = useState<Role[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
+  const [menus, setMenus] = useState<Menu[]>([])
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
-  const [permissionModalVisible, setPermissionModalVisible] = useState(false)
+  const [menuModalVisible, setMenuModalVisible] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [form] = Form.useForm()
@@ -45,7 +45,7 @@ const RoleManagement: React.FC = () => {
     total: 0,
   })
 
-  // 权限穿梭框相关状态
+  // 菜单穿梭框相关状态
   const [targetKeys, setTargetKeys] = useState<React.Key[]>([])
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([])
 
@@ -70,22 +70,22 @@ const RoleManagement: React.FC = () => {
     }
   }
 
-  // 获取权限列表
-  const fetchPermissions = async () => {
+  // 获取菜单列表
+  const fetchMenus = async () => {
     try {
-      const response = await permissionService.getPermissions({
+      const response = await menuService.getMenus({
         skip: 0,
-        limit: 1000, // 获取所有权限
+        limit: 1000, // 获取所有菜单
       })
-      setPermissions(response.items)
+      setMenus(response.items)
     } catch (error) {
-      message.error('获取权限列表失败')
+      message.error('获取菜单列表失败')
     }
   }
 
   useEffect(() => {
     fetchRoles()
-    fetchPermissions()
+    fetchMenus()
   }, [])
 
   // 处理表格分页
@@ -139,21 +139,21 @@ const RoleManagement: React.FC = () => {
     }
   }
 
-  // 打开权限分配模态框
-  const openPermissionModal = async (role: Role) => {
+  // 打开菜单分配模态框
+  const openMenuModal = async (role: Role) => {
     setSelectedRole(role)
-    setPermissionModalVisible(true)
+    setMenuModalVisible(true)
     try {
-      const rolePermissions = await roleService.getRolePermissions(role.id)
-      setTargetKeys(rolePermissions.map(p => p.id.toString()))
+      const roleMenus = await roleService.getRoleMenus(role.id)
+      setTargetKeys(roleMenus.map(m => m.id.toString()))
     } catch (error) {
-      message.error('获取角色权限失败')
+      message.error('获取角色菜单失败')
     }
   }
 
-  // 关闭权限分配模态框
-  const closePermissionModal = () => {
-    setPermissionModalVisible(false)
+  // 关闭菜单分配模态框
+  const closeMenuModal = () => {
+    setMenuModalVisible(false)
     setSelectedRole(null)
     setTargetKeys([])
     setSelectedKeys([])
@@ -169,25 +169,25 @@ const RoleManagement: React.FC = () => {
     setSelectedKeys([...sourceSelectedKeys, ...targetSelectedKeys])
   }
 
-  // 保存权限分配
-  const handleSavePermissions = async () => {
+  // 保存菜单分配
+  const handleSaveMenus = async () => {
     if (!selectedRole) return
     
     try {
-      const permissionIds = targetKeys.map(key => parseInt(key.toString()))
-      await roleService.assignPermissions(selectedRole.id, permissionIds)
-      message.success('权限分配成功')
-      closePermissionModal()
+      const menuIds = targetKeys.map(key => parseInt(key.toString()))
+      await roleService.assignMenus(selectedRole.id, menuIds)
+      message.success('菜单分配成功')
+      closeMenuModal()
     } catch (error) {
-      message.error('权限分配失败')
+      message.error('菜单分配失败')
     }
   }
 
   // 准备穿梭框数据
-  const transferData: TransferItem[] = permissions.map(permission => ({
-    key: permission.id.toString(),
-    title: permission.name,
-    description: permission.description || permission.code,
+  const transferData: TransferItem[] = menus.map(menu => ({
+    key: menu.id.toString(),
+    title: menu.name,
+    description: menu.description || menu.path,
   }))
 
   // 表格列定义
@@ -237,9 +237,9 @@ const RoleManagement: React.FC = () => {
           <Button
             type="link"
             icon={<SettingOutlined />}
-            onClick={() => openPermissionModal(record)}
+            onClick={() => openMenuModal(record)}
           >
-            权限分配
+            菜单分配
           </Button>
           <Button
             type="link"
@@ -344,19 +344,19 @@ const RoleManagement: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 权限分配模态框 */}
+      {/* 菜单分配模态框 */}
       <Modal
-        title={`为角色 "${selectedRole?.name}" 分配权限`}
-        open={permissionModalVisible}
-        onCancel={closePermissionModal}
-        onOk={handleSavePermissions}
+        title={`为角色 "${selectedRole?.name}" 分配菜单`}
+        open={menuModalVisible}
+        onCancel={closeMenuModal}
+        onOk={handleSaveMenus}
         width={800}
         okText="保存"
         cancelText="取消"
       >
         <Transfer
           dataSource={transferData}
-          titles={['可用权限', '已分配权限']}
+          titles={['可用菜单', '已分配菜单']}
           targetKeys={targetKeys}
           selectedKeys={selectedKeys}
           onChange={handleTransferChange}
