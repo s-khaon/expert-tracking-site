@@ -1,9 +1,10 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, Form, Input, message, Modal, Popconfirm, Space, Switch, Table, Tag } from 'antd'
+import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
+import { Button, Form, Input, message, Modal, Popconfirm, Space, Switch, Table, Tag, Select, Tooltip } from 'antd'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { userService } from '../../services/userService'
-import type { TableParams, User, UserCreate, UserUpdate } from '../../types'
+import { roleService } from '../../services/roleService'
+import type { TableParams, User, UserCreate, UserUpdate, Role } from '../../types'
 
 const { Search } = Input
 
@@ -11,7 +12,9 @@ const UserManagement = () => {
   const [form] = Form.useForm()
   const queryClient = useQueryClient()
   const [isModalVisible, setIsModalVisible] = useState(false)
+  const [isRoleModalVisible, setIsRoleModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [tableParams, setTableParams] = useState<TableParams>({
     page: 1,
     page_size: 10,
@@ -23,6 +26,15 @@ const UserManagement = () => {
     () => userService.getUsers(tableParams),
     {
       keepPreviousData: true,
+    }
+  )
+
+  // 获取角色列表
+  const { data: rolesData } = useQuery(
+    ['roles'],
+    () => roleService.getRoles({ limit: 100 }),
+    {
+      staleTime: 5 * 60 * 1000, // 5分钟缓存
     }
   )
 
@@ -78,6 +90,23 @@ const UserManagement = () => {
     },
   })
 
+  // 分配用户角色
+  const assignRolesMutation = useMutation(
+    ({ userId, roleIds }: { userId: number; roleIds: number[] }) =>
+      userService.updateUser(userId, { role_ids: roleIds }),
+    {
+      onSuccess: () => {
+        message.success('角色分配成功')
+        setIsRoleModalVisible(false)
+        setSelectedUser(null)
+        queryClient.invalidateQueries(['users'])
+      },
+      onError: (error: any) => {
+        message.error(error.response?.data?.message || '角色分配失败')
+      },
+    }
+  )
+
   const handleCreate = () => {
     setEditingUser(null)
     setIsModalVisible(true)
@@ -93,7 +122,22 @@ const UserManagement = () => {
       full_name: user.full_name,
       is_active: user.is_active,
       is_superuser: user.is_superuser,
+      role_ids: user.roles?.map(role => role.id) || [],
     })
+  }
+
+  const handleManageRoles = (user: User) => {
+    setSelectedUser(user)
+    setIsRoleModalVisible(true)
+  }
+
+  const handleRoleAssign = (roleIds: number[]) => {
+    if (selectedUser) {
+      assignRolesMutation.mutate({
+        userId: selectedUser.id,
+        roleIds,
+      })
+    }
   }
 
   const handleDelete = (id: number) => {
@@ -174,6 +218,20 @@ const UserManagement = () => {
       ),
     },
     {
+      title: '角色',
+      dataIndex: 'roles',
+      key: 'roles',
+      render: (roles: Role[]) => (
+        <Space size={[0, 4]} wrap>
+          {roles?.map((role) => (
+            <Tag key={role.id} color="blue">
+              {role.name}
+            </Tag>
+          )) || <Tag color="default">无角色</Tag>}
+        </Space>
+      ),
+    },
+    {
       title: '创建时间',
       dataIndex: 'created_at',
       key: 'created_at',
@@ -187,6 +245,15 @@ const UserManagement = () => {
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
+          <Tooltip title="管理角色">
+            <Button 
+              type="link" 
+              icon={<UserOutlined />} 
+              onClick={() => handleManageRoles(record)}
+            >
+              角色
+            </Button>
+          </Tooltip>
           <Popconfirm
             title="确定要删除这个用户吗？"
             onConfirm={() => handleDelete(record.id)}
@@ -293,7 +360,7 @@ const UserManagement = () => {
               label="密码"
               rules={[
                 { required: true, message: '请输入密码' },
-                { min: 6, message: '密码至少6个字符' },
+                { min: 8, message: '密码至少8个字符' },
               ]}
             >
               <Input.Password placeholder="请输入密码" />
@@ -306,6 +373,22 @@ const UserManagement = () => {
 
           <Form.Item name="is_superuser" label="超级用户" valuePropName="checked">
             <Switch />
+          </Form.Item>
+
+          <Form.Item
+            name="role_ids"
+            label="角色"
+          >
+            <Select
+              mode="multiple"
+              placeholder="请选择角色"
+              allowClear
+              loading={!rolesData}
+              options={rolesData?.items?.map((role: Role) => ({
+                label: role.name,
+                value: role.id,
+              })) || []}
+            />
           </Form.Item>
 
           <Form.Item>
@@ -330,8 +413,47 @@ const UserManagement = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
-  )
-}
 
-export default UserManagement
+        {/* 角色分配模态框 */}
+        <Modal
+          title={`为用户 "${selectedUser?.username}" 分配角色`}
+          open={isRoleModalVisible}
+          onCancel={() => {
+            setIsRoleModalVisible(false)
+            setSelectedUser(null)
+          }}
+          footer={null}
+          width={600}
+        >
+          <div style={{ marginBottom: 16 }}>
+            <p>当前角色：</p>
+            <Space size={[0, 4]} wrap>
+              {selectedUser?.roles?.map((role) => (
+                <Tag key={role.id} color="blue">
+                  {role.name}
+                </Tag>
+              )) || <Tag color="default">无角色</Tag>}
+            </Space>
+          </div>
+          
+          <div>
+            <p>选择新角色：</p>
+            <Select
+              mode="multiple"
+              placeholder="请选择角色"
+              style={{ width: '100%' }}
+              value={selectedUser?.roles?.map(role => role.id) || []}
+              onChange={handleRoleAssign}
+              loading={assignRolesMutation.isLoading || !rolesData}
+              options={rolesData?.items?.map((role: Role) => ({
+                label: role.name,
+                value: role.id,
+              })) || []}
+            />
+          </div>
+        </Modal>
+      </div>
+    )
+  }
+
+  export default UserManagement
