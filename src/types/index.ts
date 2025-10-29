@@ -227,3 +227,35 @@ export interface MenuItem {
   children?: MenuItem[]
   permission?: string
 }
+
+// 操作权限相关类型
+export interface ActionItem {
+  key: string
+  path: string
+  method: string
+  summary: string
+  group: string
+  endpoint_name: string
+  requires_auth: boolean
+  checked: boolean
+}
+
+export interface ActionGroup {
+  name: string
+  actions: ActionItem[]
+}
+
+export interface ActionTreeResponse {
+  list: ActionGroup[]
+  checked_keys: string[]
+}
+
+export interface RoleActionListResponse {
+  role_id: number
+  actions: string[]
+}
+
+export interface UpdateRoleActionRequest {
+  role_id: number
+  checked_keys: string[]
+}

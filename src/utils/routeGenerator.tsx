@@ -7,7 +7,6 @@ import type { Menu } from '@/types'
 const Dashboard = lazy(() => import('@pages/Dashboard'))
 const UserManagement = lazy(() => import('@pages/UserManagement'))
 const ExpertManagement = lazy(() => import('@pages/ExpertList'))
-const PermissionManagement = lazy(() => import('@pages/PermissionManagement'))
 const RoleManagement = lazy(() => import('@pages/RoleManagement'))
 const MenuManagement = lazy(() => import('@pages/MenuManagement'))
 
@@ -16,7 +15,6 @@ const componentMap: Record<string, React.ComponentType> = {
   'Dashboard': Dashboard,
   'UserManagement': UserManagement,
   'ExpertManagement': ExpertManagement,
-  'PermissionManagement': PermissionManagement,
   'RoleManagement': RoleManagement,
   'MenuManagement': MenuManagement,
 }

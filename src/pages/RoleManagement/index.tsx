@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, SettingOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, PlusOutlined, SettingOutlined, SafetyOutlined } from '@ant-design/icons'
 import {
   Button,
   Card,
@@ -21,7 +21,8 @@ import type { DataNode } from 'antd/es/tree'
 import React, { useEffect, useState } from 'react'
 import { menuService } from '../../services/menuService'
 import { roleService } from '../../services/roleService'
-import type { Menu, Role, RoleCreate, RoleUpdate } from '../../types'
+import { actionService } from '../../services/actionService'
+import type { Menu, Role, RoleCreate, RoleUpdate, ActionGroup } from '../../types'
 
 const RoleManagement: React.FC = () => {
   const [roles, setRoles] = useState<Role[]>([])
@@ -29,6 +30,7 @@ const RoleManagement: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [menuModalVisible, setMenuModalVisible] = useState(false)
+  const [actionModalVisible, setActionModalVisible] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [form] = Form.useForm()
@@ -41,6 +43,11 @@ const RoleManagement: React.FC = () => {
   // 菜单树相关状态
   const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([])
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
+
+  // 操作权限相关状态
+  const [actionGroups, setActionGroups] = useState<ActionGroup[]>([])
+  const [actionCheckedKeys, setActionCheckedKeys] = useState<React.Key[]>([])
+  const [actionExpandedKeys, setActionExpandedKeys] = useState<React.Key[]>([])
 
   // 获取角色列表
   const fetchRoles = async (page = 1, pageSize = 10) => {
@@ -194,6 +201,64 @@ const RoleManagement: React.FC = () => {
     }
   }
 
+  // 打开操作权限分配模态框
+  const openActionModal = async (role: Role) => {
+    setSelectedRole(role)
+    setActionModalVisible(true)
+    try {
+      // 获取操作权限树（带角色过滤）
+      const actionTree = await actionService.getActionTree({ role_id: role.id })
+      setActionGroups(actionTree.list)
+      setActionCheckedKeys(actionTree.checked_keys)
+      // 默认展开所有分组
+      const allGroupKeys = actionTree.list.map((_, index) => `group-${index}`)
+      setActionExpandedKeys(allGroupKeys)
+    } catch (error) {
+      message.error('获取操作权限失败')
+    }
+  }
+
+  // 关闭操作权限分配模态框
+  const closeActionModal = () => {
+    setActionModalVisible(false)
+    setSelectedRole(null)
+    setActionCheckedKeys([])
+    setActionExpandedKeys([])
+    setActionGroups([])
+  }
+
+  // 处理操作权限树节点选择变化
+  const handleActionTreeCheck = (
+    checkedKeysValue: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }
+  ) => {
+    const keys = Array.isArray(checkedKeysValue) ? checkedKeysValue : checkedKeysValue.checked
+    // 过滤掉group keys，只保留action keys
+    const actionKeys = keys.filter(key => !key.toString().startsWith('group-'))
+    setActionCheckedKeys(actionKeys)
+  }
+
+  // 处理操作权限树节点展开变化
+  const handleActionTreeExpand = (expandedKeysValue: React.Key[]) => {
+    setActionExpandedKeys(expandedKeysValue)
+  }
+
+  // 保存操作权限分配
+  const handleSaveActions = async () => {
+    if (!selectedRole) return
+
+    try {
+      const checkedKeysStr = actionCheckedKeys.map(key => key.toString())
+      await actionService.updateRoleActions({
+        role_id: selectedRole.id,
+        checked_keys: checkedKeysStr
+      })
+      message.success('操作权限分配成功')
+      closeActionModal()
+    } catch (error) {
+      message.error('操作权限分配失败')
+    }
+  }
+
   // 将菜单数据转换为树形数据
   const convertToTreeData = (menuList: Menu[]): DataNode[] => {
     return menuList.map(menu => ({
@@ -201,6 +266,21 @@ const RoleManagement: React.FC = () => {
       key: menu.id.toString(),
       children:
         menu.children && menu.children.length > 0 ? convertToTreeData(menu.children) : undefined,
+    }))
+  }
+
+  // 将操作权限数据转换为树形数据
+  const convertActionToTreeData = (actionGroups: ActionGroup[]): DataNode[] => {
+    if (!actionGroups || !Array.isArray(actionGroups)) {
+      return []
+    }
+    return actionGroups.map((group, groupIndex) => ({
+      title: group.name,
+      key: `group-${groupIndex}`, // 使用group-前缀避免与action key冲突
+      children: group.actions?.map(action => ({
+        title: `${action.method} ${action.path} - ${action.summary}`,
+        key: action.key, // 使用实际的action key
+      })) || [],
     }))
   }
 
@@ -248,6 +328,9 @@ const RoleManagement: React.FC = () => {
         <Space size="middle">
           <Button type="link" icon={<SettingOutlined />} onClick={() => openMenuModal(record)}>
             菜单分配
+          </Button>
+          <Button type="link" icon={<SafetyOutlined />} onClick={() => openActionModal(record)}>
+            操作授权
           </Button>
           <Button type="link" icon={<EditOutlined />} onClick={() => openModal(record)}>
             编辑
@@ -368,6 +451,37 @@ const RoleManagement: React.FC = () => {
             onCheck={handleTreeCheck}
             onExpand={handleTreeExpand}
             treeData={convertToTreeData(menus)}
+            style={{
+              maxHeight: 400,
+              overflow: 'auto',
+              border: '1px solid #d9d9d9',
+              borderRadius: '6px',
+              padding: '8px',
+            }}
+          />
+        </div>
+      </Modal>
+
+      {/* 操作权限分配模态框 */}
+      <Modal
+        title={`为角色 "${selectedRole?.name}" 分配操作权限`}
+        open={actionModalVisible}
+        onCancel={closeActionModal}
+        onOk={handleSaveActions}
+        width={800}
+        okText="保存"
+        cancelText="取消"
+      >
+        <div style={{ padding: '16px 0' }}>
+          <h4>请选择要分配给该角色的操作权限：</h4>
+          <Divider />
+          <Tree
+            checkable
+            checkedKeys={actionCheckedKeys}
+            expandedKeys={actionExpandedKeys}
+            onCheck={handleActionTreeCheck}
+            onExpand={handleActionTreeExpand}
+            treeData={convertActionToTreeData(actionGroups)}
             style={{
               maxHeight: 400,
               overflow: 'auto',
