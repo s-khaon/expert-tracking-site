@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User, Token } from '../types'
+import type { Token, User } from '../types'
 
 interface AuthState {
   user: User | null
@@ -14,7 +14,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    set => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -24,26 +24,34 @@ export const useAuthStore = create<AuthState>()(
           token,
           isAuthenticated: true,
         }),
-      logout: () =>
+      logout: () => {
+        // 清空认证状态
         set({
           user: null,
           token: null,
           isAuthenticated: false,
-        }),
+        })
+
+        // 清空localStorage中的持久化数据
+        localStorage.removeItem('auth-storage')
+
+        // 清空sessionStorage
+        sessionStorage.clear()
+      },
       updateUser: (user: User) =>
-        set((state) => ({
+        set(state => ({
           ...state,
           user,
         })),
       updateToken: (token: Token) =>
-        set((state) => ({
+        set(state => ({
           ...state,
           token,
         })),
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({
+      partialize: state => ({
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,

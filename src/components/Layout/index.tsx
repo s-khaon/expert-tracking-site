@@ -1,44 +1,46 @@
-import { useState, useEffect } from 'react'
-import { Layout as AntLayout, Menu, Dropdown, Avatar, Button, message, Spin } from 'antd'
+import React, { useState } from 'react'
+import {
+  Layout as AntLayout,
+  Menu,
+  Button,
+  Dropdown,
+  Avatar,
+  Spin,
+  message,
+} from 'antd'
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  DashboardOutlined,
   UserOutlined,
-  TeamOutlined,
   LogoutOutlined,
-  SettingOutlined,
+  DashboardOutlined,
+  TeamOutlined,
   SafetyOutlined,
   ControlOutlined,
   AppstoreOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useQuery } from 'react-query'
 import { useAuthStore } from '../../store/authStore'
-import { menuService } from '../../services/menuService'
-import type { MenuItem, Menu as MenuType } from '../../types'
+import type { Menu as MenuType, MenuItem } from '../../types'
 
 const { Header, Sider, Content } = AntLayout
 
 interface LayoutProps {
   children: React.ReactNode
+  userMenus: MenuType[]
+  menusLoading: boolean
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout: React.FC<LayoutProps> = ({ 
+  children, 
+  userMenus, 
+  menusLoading 
+}) => {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
-
-  // 获取用户可访问的菜单树
-  const { data: userMenus = [], isLoading: menusLoading } = useQuery(
-    ['userMenuTree'],
-    () => menuService.getCurrentUserMenuTree(),
-    {
-      enabled: !!user,
-      staleTime: 5 * 60 * 1000, // 5分钟缓存
-    }
-  )
 
   // 图标映射
   const iconMap: Record<string, React.ReactNode> = {

@@ -14,16 +14,15 @@ import {
   Col,
   Tag,
   Transfer,
-  Tabs,
 } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { TransferDirection, TransferProps } from 'antd/es/transfer'
+import type { TransferDirection } from 'antd/es/transfer'
 import { roleService } from '../../services/roleService'
 import { permissionService } from '../../services/permissionService'
 import type { Role, RoleCreate, RoleUpdate, Permission } from '../../types'
 
-const { TabPane } = Tabs
+// const { TabPane } = Tabs // Removed unused variable
 
 interface TransferItem {
   key: string
@@ -161,7 +160,7 @@ const RoleManagement: React.FC = () => {
   }
 
   // 处理权限穿梭框变化
-  const handleTransferChange = (newTargetKeys: React.Key[], direction: TransferDirection, moveKeys: React.Key[]) => {
+  const handleTransferChange = (newTargetKeys: React.Key[], _direction: TransferDirection, _moveKeys: React.Key[]) => {
     setTargetKeys(newTargetKeys)
   }
 
