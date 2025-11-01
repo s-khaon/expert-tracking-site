@@ -6,9 +6,11 @@ import type { Menu } from '@/types'
 // 懒加载页面组件
 const Dashboard = lazy(() => import('@pages/Dashboard'))
 const UserManagement = lazy(() => import('@pages/UserManagement'))
-const ExpertManagement = lazy(() => import('@pages/ExpertList'))
+const ExpertManagement = lazy(() => import('@pages/InfluencerManagement'))
 const RoleManagement = lazy(() => import('@pages/RoleManagement'))
 const MenuManagement = lazy(() => import('@pages/MenuManagement'))
+const InfluencerManagement = lazy(() => import('@pages/InfluencerManagement'))
+const ContactRecordManagement = lazy(() => import('@pages/ContactRecordManagement'))
 
 // 组件映射表 - 将菜单的component字段映射到实际的React组件
 const componentMap: Record<string, React.ComponentType> = {
@@ -17,6 +19,8 @@ const componentMap: Record<string, React.ComponentType> = {
   'ExpertManagement': ExpertManagement,
   'RoleManagement': RoleManagement,
   'MenuManagement': MenuManagement,
+  'InfluencerManagement': InfluencerManagement,
+  'ContactRecordManagement': ContactRecordManagement,
 }
 
 /**

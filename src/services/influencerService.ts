@@ -1,0 +1,80 @@
+import type { 
+  Influencer, 
+  InfluencerCreate, 
+  InfluencerUpdate, 
+  InfluencerListResponse,
+  InfluencerSimple,
+  InfluencerSearchParams 
+} from '../types'
+import api from './api'
+
+export const influencerService = {
+  // 获取达人列表
+  getInfluencers: async (params?: InfluencerSearchParams): Promise<InfluencerListResponse> => {
+    const response = await api.get('/influencers/', { params })
+    return response.data
+  },
+
+  // 获取达人详情
+  getInfluencer: async (id: number): Promise<Influencer> => {
+    const response = await api.get(`/influencers/${id}`)
+    return response.data
+  },
+
+  // 创建达人
+  createInfluencer: async (data: InfluencerCreate): Promise<Influencer> => {
+    const response = await api.post('/influencers/', data)
+    return response.data
+  },
+
+  // 更新达人信息
+  updateInfluencer: async (id: number, data: InfluencerUpdate): Promise<Influencer> => {
+    const response = await api.put(`/influencers/${id}`, data)
+    return response.data
+  },
+
+  // 删除达人
+  deleteInfluencer: async (id: number): Promise<void> => {
+    await api.delete(`/influencers/${id}`)
+  },
+
+  // 根据姓名获取达人
+  getInfluencerByName: async (name: string): Promise<Influencer> => {
+    const response = await api.get(`/influencers/name/${name}`)
+    return response.data
+  },
+
+  // 根据状态获取达人列表
+  getInfluencersByStatus: async (status: string, params?: InfluencerSearchParams): Promise<InfluencerListResponse> => {
+    const response = await api.get(`/influencers/status/${status}`, { params })
+    return response.data
+  },
+
+  // 根据优先级获取达人列表
+  getInfluencersByPriority: async (priority: string, params?: InfluencerSearchParams): Promise<InfluencerListResponse> => {
+    const response = await api.get(`/influencers/priority/${priority}`, { params })
+    return response.data
+  },
+
+  // 根据平台搜索达人
+  searchInfluencersByPlatform: async (platform: string, params?: InfluencerSearchParams): Promise<InfluencerListResponse> => {
+    const response = await api.get(`/influencers/platform/${platform}`, { params })
+    return response.data
+  },
+
+  // 获取简化的达人列表（用于下拉选择等）
+  getInfluencersSimple: async (): Promise<InfluencerSimple[]> => {
+    const response = await api.get('/influencers/simple')
+    return response.data
+  },
+
+  // 批量删除达人
+  batchDeleteInfluencers: async (ids: number[]): Promise<void> => {
+    await api.post('/influencers/batch-delete', { ids })
+  },
+
+  // 批量更新达人状态
+  batchUpdateInfluencerStatus: async (ids: number[], status: string): Promise<void> => {
+    await api.post('/influencers/batch-update-status', { ids, status })
+  }
+}

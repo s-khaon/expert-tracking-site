@@ -259,3 +259,138 @@ export interface UpdateRoleActionRequest {
   role_id: number
   checked_keys: string[]
 }
+
+// 达人管理相关类型
+export interface Influencer {
+  id: number
+  name: string
+  nickname?: string
+  email?: string
+  wechat?: string
+  douyin_url?: string
+  xiaohongshu_url?: string
+  wechat_channels_url?: string
+  douyin_followers?: number
+  xiaohongshu_followers?: number
+  wechat_channels_followers?: number
+  cooperation_price?: number
+  cooperation_types?: string
+  is_refund?: boolean
+  wechat_channels_has_shop?: boolean
+  description?: string
+  internal_notes?: string
+  created_at: string
+  updated_at: string
+  created_by?: number
+  updated_by?: number
+}
+
+export interface InfluencerCreate {
+  name: string
+  nickname?: string
+  email?: string
+  wechat?: string
+  douyin_url?: string
+  xiaohongshu_url?: string
+  wechat_channels_url?: string
+  douyin_followers?: number
+  xiaohongshu_followers?: number
+  wechat_channels_followers?: number
+  cooperation_price?: number
+  cooperation_types?: string
+  is_refund?: boolean
+  wechat_channels_has_shop?: boolean
+  description?: string
+  internal_notes?: string
+}
+
+export interface InfluencerUpdate {
+  name?: string
+  nickname?: string
+  email?: string
+  wechat?: string
+  douyin_url?: string
+  xiaohongshu_url?: string
+  wechat_channels_url?: string
+  douyin_followers?: number
+  xiaohongshu_followers?: number
+  wechat_channels_followers?: number
+  cooperation_price?: number
+  cooperation_types?: string
+  is_refund?: boolean
+  wechat_channels_has_shop?: boolean
+  description?: string
+  internal_notes?: string
+}
+
+export interface InfluencerSimple {
+  id: number
+  name: string
+  nickname?: string
+}
+
+export interface InfluencerListResponse extends PaginatedResponse<Influencer> {}
+
+// 建联记录相关类型
+export interface ContactRecord {
+  id: number
+  influencer_id: number
+  influencer_name?: string
+  contact_type: string
+  contact_method?: string
+  contact_person?: string
+  contact_content?: string
+  contact_result?: string
+  follow_up_required: string
+  follow_up_date?: string
+  follow_up_notes?: string
+  contact_date?: string
+  created_at: string
+  updated_at: string
+  created_by?: number
+  updated_by?: number
+  influencer?: Influencer
+}
+
+export interface ContactRecordCreate {
+  influencer_id: number
+  contact_type: string
+  contact_method?: string
+  contact_person?: string
+  contact_content?: string
+  contact_result?: string
+  follow_up_required?: string
+  follow_up_date?: string
+  follow_up_notes?: string
+  contact_date?: string
+}
+
+export interface ContactRecordUpdate {
+  contact_type?: string
+  contact_method?: string
+  contact_person?: string
+  contact_content?: string
+  contact_result?: string
+  follow_up_required?: string
+  follow_up_date?: string
+  follow_up_notes?: string
+  contact_date?: string
+}
+
+export interface ContactRecordListResponse extends PaginatedResponse<ContactRecord> {}
+
+// 达人搜索参数
+export interface InfluencerSearchParams extends PaginationParams {
+  name?: string
+  platform?: string
+}
+
+// 建联记录搜索参数
+export interface ContactRecordSearchParams extends PaginationParams {
+  influencer_id?: number
+  contact_type?: string
+  contact_result?: string
+  follow_up_required?: string
+  start_date?: string
+  end_date?: string
+}

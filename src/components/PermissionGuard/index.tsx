@@ -2,7 +2,7 @@ import React from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { permissionService } from '../../services/permissionService'
 import { useQuery } from 'react-query'
-import type { Permission } from '../../types'
+
 
 interface PermissionGuardProps {
   children: React.ReactNode
@@ -26,7 +26,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   // 获取用户权限
   const { data: userPermissions, isLoading } = useQuery(
     ['userPermissions', user?.id],
-    () => permissionService.getUserPermissions(user!.id),
+    () => user?.id ? permissionService.getUserPermissions() : Promise.resolve([]),
     {
       enabled: !!user?.id && isAuthenticated,
       staleTime: 5 * 60 * 1000, // 5分钟缓存
@@ -46,7 +46,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   // 检查权限
   const hasPermission = (permCode: string): boolean => {
     if (!userPermissions) return false
-    return userPermissions.some((p: Permission) => p.code === permCode)
+    return userPermissions.some((p) => p.code === permCode)
   }
 
   // 单个权限检查
