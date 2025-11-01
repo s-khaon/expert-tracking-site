@@ -113,10 +113,19 @@ const InfluencerManagement: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await influencerService.deleteInfluencer(id)
-      message.success('删除成功')
+      message.success('删除达人成功')
       fetchInfluencers()
     } catch (error) {
-      message.error('删除失败')
+      message.error('删除达人失败')
+    }
+  }
+
+  // 格式化粉丝数量显示
+  const formatFollowersCount = (count: number) => {
+    if (count < 10000) {
+      return count.toString()
+    } else {
+      return `${(count / 10000).toFixed(1)}万`
     }
   }
 
@@ -137,6 +146,19 @@ const InfluencerManagement: React.FC = () => {
     setFormVisible(false)
     setEditingInfluencer(null)
     fetchInfluencers()
+  }
+
+  // 处理导出
+  const handleExport = async () => {
+    try {
+      setLoading(true)
+      await influencerService.exportInfluencers(searchParams)
+      message.success('导出成功')
+    } catch (error) {
+      message.error('导出失败')
+    } finally {
+      setLoading(false)
+    }
   }
 
 
@@ -183,13 +205,13 @@ const InfluencerManagement: React.FC = () => {
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
           {record.douyin_followers && (
-            <div>抖音: {(record.douyin_followers / 10000).toFixed(1)}万</div>
+            <div>抖音: {formatFollowersCount(record.douyin_followers)}</div>
           )}
           {record.xiaohongshu_followers && (
-            <div>小红书: {(record.xiaohongshu_followers / 10000).toFixed(1)}万</div>
+            <div>小红书: {formatFollowersCount(record.xiaohongshu_followers)}</div>
           )}
           {record.wechat_channels_followers && (
-            <div>视频号: {(record.wechat_channels_followers / 10000).toFixed(1)}万</div>
+            <div>视频号: {formatFollowersCount(record.wechat_channels_followers)}</div>
           )}
         </div>
       )
@@ -294,7 +316,8 @@ const InfluencerManagement: React.FC = () => {
                 </Button>
                 <Button
                   icon={<ExportOutlined />}
-                  onClick={() => message.info('导出功能开发中')}
+                  onClick={handleExport}
+                  loading={loading}
                 >
                   导出
                 </Button>
@@ -342,7 +365,7 @@ const InfluencerManagement: React.FC = () => {
         onCancel={() => setFormVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <InfluencerForm
           influencer={editingInfluencer}
@@ -358,7 +381,7 @@ const InfluencerManagement: React.FC = () => {
         width={600}
         open={detailVisible}
         onClose={() => setDetailVisible(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         {selectedInfluencer && (
           <InfluencerDetail 
@@ -380,14 +403,15 @@ const InfluencerManagement: React.FC = () => {
         width={800}
         open={contactRecordsVisible}
         onClose={() => setContactRecordsVisible(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         {contactInfluencer && (
-          <ContactRecordList 
-            influencerId={contactInfluencer.id} 
-            visible={contactRecordsVisible}
-            onClose={() => setContactRecordsVisible(false)}
-          />
+          <ContactRecordList
+          influencerId={contactInfluencer.id}
+          visible={contactRecordsVisible}
+          onClose={() => setContactRecordsVisible(false)}
+          showAsModal={false}
+        />
         )}
       </Drawer>
     </div>

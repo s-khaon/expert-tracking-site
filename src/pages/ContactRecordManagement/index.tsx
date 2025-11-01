@@ -728,7 +728,7 @@ const ContactRecordManagement: React.FC = () => {
         onCancel={() => setFormVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <ContactRecordForm
           contactRecord={editingRecord}
@@ -745,7 +745,7 @@ const ContactRecordManagement: React.FC = () => {
         onCancel={() => setDetailVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         {viewingRecord && (
           <ContactRecordDetail

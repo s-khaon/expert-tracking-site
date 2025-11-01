@@ -32,12 +32,14 @@ interface ContactRecordListProps {
   influencerId: number
   visible: boolean
   onClose: () => void
+  showAsModal?: boolean // 新增属性，控制是否显示为Modal
 }
 
 const ContactRecordList: React.FC<ContactRecordListProps> = ({
   influencerId,
   visible,
-  onClose
+  onClose,
+  showAsModal = true
 }) => {
   const [records, setRecords] = useState<ContactRecord[]>([])
   const [loading, setLoading] = useState(false)
@@ -343,15 +345,8 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
     )
   }
 
-  return (
-    <Modal
-      title="建联记录"
-      open={visible}
-      onCancel={onClose}
-      width={1200}
-      footer={null}
-      destroyOnClose
-    >
+  const content = (
+    <>
       <div style={{ marginBottom: 16 }}>
         <Space>
           <Button
@@ -405,7 +400,7 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
         onCancel={() => setFormVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <ContactRecordForm
           contactRecord={editingRecord}
@@ -414,8 +409,25 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
           onCancel={() => setFormVisible(false)}
         />
       </Modal>
-    </Modal>
+    </>
   )
+
+  if (showAsModal) {
+    return (
+      <Modal
+        title="建联记录"
+        open={visible}
+        onCancel={onClose}
+        width={1200}
+        footer={null}
+        destroyOnHidden
+      >
+        {content}
+      </Modal>
+    )
+  }
+
+  return content
 }
 
 export default ContactRecordList

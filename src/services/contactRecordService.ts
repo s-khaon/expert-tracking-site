@@ -51,7 +51,7 @@ export const contactRecordService = {
 
   // 标记跟进完成
   markFollowUpCompleted: async (id: number, notes?: string): Promise<ContactRecord> => {
-    const response = await api.post(`/contact-records/${id}/complete-follow-up`, { notes })
+    const response = await api.patch(`/contact-records/${id}/follow-up`, { notes })
     return response.data
   },
 
@@ -78,11 +78,21 @@ export const contactRecordService = {
   },
 
   // 导出建联记录
-  exportContactRecords: async (params?: ContactRecordSearchParams): Promise<Blob> => {
+  exportContactRecords: async (params?: ContactRecordSearchParams): Promise<void> => {
     const response = await api.get('/contact-records/export', { 
       params,
       responseType: 'blob'
     })
-    return response.data
+    
+    // 创建下载链接
+    const blob = new Blob([response.data], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `contact_records_${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
   }
 }

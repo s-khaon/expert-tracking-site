@@ -76,5 +76,24 @@ export const influencerService = {
   // 批量更新达人状态
   batchUpdateInfluencerStatus: async (ids: number[], status: string): Promise<void> => {
     await api.post('/influencers/batch-update-status', { ids, status })
+  },
+
+  // 导出达人信息
+  exportInfluencers: async (params?: InfluencerSearchParams): Promise<void> => {
+    const response = await api.get('/influencers/export', { 
+      params,
+      responseType: 'blob'
+    })
+    
+    // 创建下载链接
+    const blob = new Blob([response.data], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `influencers_${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
   }
 }

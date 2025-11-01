@@ -35,27 +35,23 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
 }) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [influencerOptions, setInfluencerOptions] = useState<{ value: number; label: string }[]>([])
+  const [influencerOptions, setInfluencerOptions] = useState<{ value: string; label: string, id: Number }[]>([])
   const [influencerSearchLoading, setInfluencerSearchLoading] = useState(false)
 
   // 搜索达人
   const searchInfluencers = async (search: string) => {
-    if (!search.trim()) {
-      setInfluencerOptions([])
-      return
-    }
-    
     try {
       setInfluencerSearchLoading(true)
       const response = await influencerService.getInfluencers({
         page: 1,
         page_size: 20, // 限制搜索结果数量
-        search: search.trim()
+        search: search?.trim() || '' // 使用空字符串而不是返回空数组
       })
       
       const options = response.items.map(influencer => ({
-        value: influencer.id,
-        label: `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`
+        value: `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`,
+        label: `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`,
+        id: influencer.id
       }))
       
       setInfluencerOptions(options)
@@ -70,21 +66,50 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
   // 当有预设的达人ID时，获取该达人信息
   const loadSelectedInfluencer = async (influencerId: number) => {
     try {
-      const response = await influencerService.getInfluencers({
-        page: 1,
-        page_size: 1,
-        search: influencerId.toString()
-      })
+      // 直接通过ID获取达人详情
+      const influencer = await influencerService.getInfluencer(influencerId)
       
-      if (response.items.length > 0) {
-        const influencer = response.items[0]
+      if (influencer) {
+        const label = `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`
         setInfluencerOptions([{
-          value: influencer.id,
-          label: `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`
+          value: label,
+          label: label,
+          id: influencer.id
         }])
+        // 设置表单显示值
+        form.setFieldsValue({ 
+          influencer_id: influencerId,
+          influencer_display: label 
+        })
       }
     } catch (error) {
-      console.error('获取达人信息失败')
+      console.error('获取达人信息失败:', error)
+      // 如果直接获取失败，尝试通过搜索获取
+      try {
+        const response = await influencerService.getInfluencers({
+          page: 1,
+          page_size: 20,
+          search: influencerId.toString()
+        })
+        
+        // 查找匹配的达人
+        const matchedInfluencer = response.items.find(item => item.id === influencerId)
+        if (matchedInfluencer) {
+          const label = `${matchedInfluencer.name} (${matchedInfluencer.nickname || 'ID: ' + matchedInfluencer.id})`
+          setInfluencerOptions([{
+            value: label,
+            label: label,
+            id: matchedInfluencer.id
+          }])
+          // 设置表单显示值
+          form.setFieldsValue({ 
+            influencer_id: influencerId,
+            influencer_display: label 
+          })
+        }
+      } catch (searchError) {
+        console.error('搜索达人信息也失败:', searchError)
+      }
     }
   }
 
@@ -101,8 +126,9 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
       }
     } else {
       form.resetFields()
+      // 在新建记录时，默认加载达人列表
+      searchInfluencers('')
       if (influencerId) {
-        form.setFieldsValue({ influencer_id: influencerId })
         loadSelectedInfluencer(influencerId)
       }
     }
@@ -152,7 +178,7 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              name="influencer_id"
+              name="influencer_display"
               label="选择达人"
               rules={[{ required: true, message: '请选择达人' }]}
             >
@@ -160,10 +186,24 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
                 placeholder="搜索并选择达人"
                 options={influencerOptions}
                 onSearch={searchInfluencers}
+                onSelect={(value, option) => {
+                  // 从option中获取实际的ID
+                  const selectedOption = influencerOptions.find(opt => opt.value === value)
+                  if (selectedOption && 'id' in selectedOption) {
+                    form.setFieldsValue({ 
+                      influencer_id: (selectedOption as any).id,
+                      influencer_display: value 
+                    })
+                  }
+                }}
                 filterOption={false}
                 showSearch
                 notFoundContent={influencerSearchLoading ? '搜索中...' : '暂无数据'}
               />
+            </Form.Item>
+            {/* 隐藏的字段存储实际的达人ID */}
+            <Form.Item name="influencer_id" hidden>
+              <Input />
             </Form.Item>
           </Col>
           <Col span={12}>
