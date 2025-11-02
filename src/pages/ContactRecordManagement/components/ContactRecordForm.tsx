@@ -186,7 +186,7 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
                 placeholder="搜索并选择达人"
                 options={influencerOptions}
                 onSearch={searchInfluencers}
-                onSelect={(value, option) => {
+                onSelect={(value, _option) => {
                   // 从option中获取实际的ID
                   const selectedOption = influencerOptions.find(opt => opt.value === value)
                   if (selectedOption && 'id' in selectedOption) {

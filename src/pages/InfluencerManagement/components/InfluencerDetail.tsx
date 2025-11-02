@@ -6,7 +6,6 @@ import {
   Space,
   Avatar,
   Button,
-  Divider,
   Row,
   Col,
   Statistic

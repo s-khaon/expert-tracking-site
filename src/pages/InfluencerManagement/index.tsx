@@ -4,7 +4,6 @@ import {
   Button,
   Space,
   Input,
-  Select,
   Card,
   Modal,
   message,
@@ -28,6 +27,7 @@ import {
   UserOutlined
 } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
+import type { SorterResult, FilterValue } from 'antd/es/table/interface'
 import type { Influencer, InfluencerSearchParams } from '@/types'
 import { influencerService } from '@/services/influencerService'
 
@@ -88,12 +88,30 @@ const InfluencerManagement: React.FC = () => {
 
 
 
-  // 处理分页
-  const handleTableChange = (pagination: TablePaginationConfig) => {
+  // 处理分页和排序
+  const handleTableChange = (
+    pagination: TablePaginationConfig,
+    _filters: Record<string, FilterValue | null>,
+    sorter: SorterResult<Influencer> | SorterResult<Influencer>[]
+  ) => {
+    const sortInfo = Array.isArray(sorter) ? sorter[0] : sorter
+    
+    // 字段映射：前端字段名 -> 后端字段名
+    const fieldMapping: Record<string, string> = {
+      'followers': 'douyin_followers', // 默认按抖音粉丝数排序
+      'business': 'cooperation_price', // 按报价排序
+      'updated_at': 'updated_at',
+      'id': 'id'
+    }
+    
+    const mappedField = sortInfo?.field ? fieldMapping[String(sortInfo.field)] || String(sortInfo.field) : undefined
+    
     setSearchParams(prev => ({
       ...prev,
       page: pagination.current || 1,
-      page_size: pagination.pageSize || 10
+      page_size: pagination.pageSize || 10,
+      order_by: mappedField,
+      order_direction: sortInfo?.order === 'ascend' ? 'asc' : sortInfo?.order === 'descend' ? 'desc' : undefined
     }))
   }
 
@@ -188,6 +206,17 @@ const InfluencerManagement: React.FC = () => {
       )
     },
     {
+      title: '更新时间',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      width: 150,
+      sorter: true,
+      sortDirections: ['descend', 'ascend'],
+      render: (text: string) => (
+        text ? new Date(text).toLocaleString() : '-'
+      )
+    },
+    {
       title: '联系方式',
       key: 'contact',
       width: 150,
@@ -202,6 +231,8 @@ const InfluencerManagement: React.FC = () => {
       title: '粉丝数据',
       key: 'followers',
       width: 150,
+      sorter: true,
+      sortDirections: ['descend', 'ascend'],
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
           {record.douyin_followers && (
@@ -220,6 +251,8 @@ const InfluencerManagement: React.FC = () => {
       title: '商务信息',
       key: 'business',
       width: 150,
+      sorter: true,
+      sortDirections: ['descend', 'ascend'],
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
           {record.cooperation_price && (

@@ -275,7 +275,7 @@ const ContactRecordManagement: React.FC = () => {
       title: '联系类型',
       dataIndex: 'contact_type',
       key: 'contact_type',
-      width: 100,
+      width: 120,
       render: (type: string) => (
         <Tag color={getContactTypeColor(type)}>
           {getContactTypeText(type)}
@@ -294,13 +294,13 @@ const ContactRecordManagement: React.FC = () => {
       title: '联系方式',
       dataIndex: 'contact_method',
       key: 'contact_method',
-      width: 100
+      width: 120
     },
     {
       title: '联系人',
       dataIndex: 'contact_person',
       key: 'contact_person',
-      width: 100
+      width: 120
     },
     {
       title: '联系内容',
@@ -317,7 +317,7 @@ const ContactRecordManagement: React.FC = () => {
       title: '联系结果',
       dataIndex: 'contact_result',
       key: 'contact_result',
-      width: 100,
+      width: 120,
       render: (result: string) => (
         <Tag color={getContactResultColor(result)}>
           {getContactResultText(result)}
@@ -334,7 +334,7 @@ const ContactRecordManagement: React.FC = () => {
       title: '跟进状态',
       dataIndex: 'follow_up_required',
       key: 'follow_up_required',
-      width: 100,
+      width: 120,
       render: (required: string) => {
         if (required === 'yes') {
           return (
