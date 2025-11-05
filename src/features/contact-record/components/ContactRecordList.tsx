@@ -24,7 +24,7 @@ import {
 } from '@ant-design/icons'
 import type { ContactRecord, ContactRecordSearchParams } from '@/types'
 import { contactRecordService } from '@/services/contactRecordService'
-import ContactRecordForm from '../../ContactRecordManagement/components/ContactRecordForm'
+import ContactRecordForm from './ContactRecordForm'
 
 const { Text } = Typography
 

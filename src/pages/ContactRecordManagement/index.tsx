@@ -35,8 +35,8 @@ import type { ColumnsType } from 'antd/es/table'
 import type { ContactRecord, ContactRecordSearchParams } from '@/types'
 import { contactRecordService } from '@/services/contactRecordService'
 import { influencerService } from '@/services/influencerService'
-import ContactRecordForm from './components/ContactRecordForm'
-import ContactRecordDetail from './components/ContactRecordDetail'
+import ContactRecordForm from '@/features/contact-record/components/ContactRecordForm'
+import ContactRecordDetail from '@/features/contact-record/components/ContactRecordDetail'
 
 const { RangePicker } = DatePicker
 const { Option } = Select

@@ -1,23 +1,13 @@
-import React from 'react'
-import {
-  Descriptions,
-  Card,
-  Tag,
-  Space,
-  Avatar,
-  Button,
-  Row,
-  Col,
-  Statistic
-} from 'antd'
-import {
-  UserOutlined,
-  MailOutlined,
-  WechatOutlined,
-  TikTokOutlined,
-  InstagramOutlined
-} from '@ant-design/icons'
 import type { Influencer } from '@/types'
+import {
+  InstagramOutlined,
+  MailOutlined,
+  TikTokOutlined,
+  UserOutlined,
+  WechatOutlined,
+} from '@ant-design/icons'
+import { Avatar, Button, Card, Col, Descriptions, Row, Space, Statistic, Tag } from 'antd'
+import React from 'react'
 
 interface InfluencerDetailProps {
   influencer: Influencer
@@ -25,13 +15,7 @@ interface InfluencerDetailProps {
   onClose: () => void
 }
 
-const InfluencerDetail: React.FC<InfluencerDetailProps> = ({
-  influencer,
-  onEdit,
-  onClose
-}) => {
-
-
+const InfluencerDetail: React.FC<InfluencerDetailProps> = ({ influencer, onEdit, onClose }) => {
   const formatNumber = (value: string | number | undefined): React.ReactNode => {
     const num = typeof value === 'string' ? parseInt(value) : value
     if (!num) return '0'
@@ -41,15 +25,32 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({
     return num.toLocaleString()
   }
 
-
-
-  const parseCooperationTypes = (types: string | null) => {
+  const parseCooperationTypes = (types: unknown): string[] => {
     if (!types) return []
-    try {
-      return JSON.parse(types)
-    } catch {
-      return []
+    if (Array.isArray(types)) {
+      return types.map(t => String(t)).filter(Boolean)
     }
+    if (typeof types === 'string') {
+      const s = types.trim()
+      if (!s) return []
+      try {
+        const parsed = JSON.parse(s)
+        return Array.isArray(parsed) ? parsed.map(t => String(t)).filter(Boolean) : []
+      } catch {
+        // 回退：处理非JSON的逗号分隔字符串或带括号的字符串
+        return s
+          .replace(/^\[|\]$/g, '')
+          .split(',')
+          .map(x =>
+            x
+              .trim()
+              .replace(/^"(.*)"$/, '$1')
+              .replace(/^'(.*)'$/, '$1')
+          )
+          .filter(Boolean)
+      }
+    }
+    return []
   }
 
   return (
@@ -57,7 +58,9 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({
       <div style={{ marginBottom: 16, textAlign: 'right' }}>
         <Space>
           <Button onClick={onClose}>关闭</Button>
-          <Button type="primary" onClick={onEdit}>编辑</Button>
+          <Button type="primary" onClick={onEdit}>
+            编辑
+          </Button>
         </Space>
       </div>
 
@@ -87,13 +90,21 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({
       {/* 联系方式卡片 */}
       <Card title="联系方式" style={{ marginBottom: 16 }}>
         <Descriptions column={2} size="small">
-          <Descriptions.Item 
-            label={<><MailOutlined /> 邮箱地址</>}
+          <Descriptions.Item
+            label={
+              <>
+                <MailOutlined /> 邮箱地址
+              </>
+            }
           >
             {influencer.email || '-'}
           </Descriptions.Item>
-          <Descriptions.Item 
-            label={<><WechatOutlined /> 微信号</>}
+          <Descriptions.Item
+            label={
+              <>
+                <WechatOutlined /> 微信号
+              </>
+            }
           >
             {influencer.wechat || '-'}
           </Descriptions.Item>
@@ -133,32 +144,50 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({
       {/* 平台链接卡片 */}
       <Card title="平台链接" style={{ marginBottom: 16 }}>
         <Descriptions column={1} size="small">
-          <Descriptions.Item 
-            label={<><TikTokOutlined /> 抖音链接</>}
+          <Descriptions.Item
+            label={
+              <>
+                <TikTokOutlined /> 抖音链接
+              </>
+            }
           >
             {influencer.douyin_url ? (
               <a href={influencer.douyin_url} target="_blank" rel="noopener noreferrer">
                 {influencer.douyin_url}
               </a>
-            ) : '-'}
+            ) : (
+              '-'
+            )}
           </Descriptions.Item>
-          <Descriptions.Item 
-            label={<><InstagramOutlined /> 小红书链接</>}
+          <Descriptions.Item
+            label={
+              <>
+                <InstagramOutlined /> 小红书链接
+              </>
+            }
           >
             {influencer.xiaohongshu_url ? (
               <a href={influencer.xiaohongshu_url} target="_blank" rel="noopener noreferrer">
                 {influencer.xiaohongshu_url}
               </a>
-            ) : '-'}
+            ) : (
+              '-'
+            )}
           </Descriptions.Item>
-          <Descriptions.Item 
-            label={<><WechatOutlined /> 视频号链接</>}
+          <Descriptions.Item
+            label={
+              <>
+                <WechatOutlined /> 视频号链接
+              </>
+            }
           >
             {influencer.wechat_channels_url ? (
               <a href={influencer.wechat_channels_url} target="_blank" rel="noopener noreferrer">
                 {influencer.wechat_channels_url}
               </a>
-            ) : '-'}
+            ) : (
+              '-'
+            )}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -167,18 +196,24 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({
       <Card title="商务信息" style={{ marginBottom: 16 }}>
         <Descriptions column={2} size="small">
           <Descriptions.Item label="合作报价">
-            {influencer.cooperation_price ? `¥${influencer.cooperation_price.toLocaleString()}` : '-'}
+            {influencer.cooperation_price
+              ? `¥${influencer.cooperation_price.toLocaleString()}`
+              : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="合作类型">
             <Space wrap>
-              {parseCooperationTypes(influencer.cooperation_types || '').map((type: string, index: number) => (
-                <Tag key={index} color="blue">{type}</Tag>
-              ))}
+              {parseCooperationTypes(influencer.cooperation_types).map(
+                (type: string, index: number) => (
+                  <Tag key={index} color="blue">
+                    {type}
+                  </Tag>
+                )
+              )}
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label="退款政策">
             <Tag color={influencer.is_refund ? 'green' : 'red'}>
-              {influencer.is_refund ? '支持退款' : '不支持退款'}
+              {influencer.is_refund ? '支持返款' : '不支持返款'}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="视频号小店">
@@ -193,14 +228,10 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({
       <Card title="描述信息" style={{ marginBottom: 16 }}>
         <Descriptions column={1} size="small">
           <Descriptions.Item label="达人描述">
-            <div style={{ whiteSpace: 'pre-wrap' }}>
-              {influencer.description || '-'}
-            </div>
+            <div style={{ whiteSpace: 'pre-wrap' }}>{influencer.description || '-'}</div>
           </Descriptions.Item>
           <Descriptions.Item label="内部备注">
-            <div style={{ whiteSpace: 'pre-wrap' }}>
-              {influencer.internal_notes || '-'}
-            </div>
+            <div style={{ whiteSpace: 'pre-wrap' }}>{influencer.internal_notes || '-'}</div>
           </Descriptions.Item>
         </Descriptions>
       </Card>

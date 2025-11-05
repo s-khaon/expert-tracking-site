@@ -31,9 +31,9 @@ import type { SorterResult, FilterValue } from 'antd/es/table/interface'
 import type { Influencer, InfluencerSearchParams } from '@/types'
 import { influencerService } from '@/services/influencerService'
 
-import InfluencerForm from './components/InfluencerForm'
-import InfluencerDetail from './components/InfluencerDetail'
-import ContactRecordList from './components/ContactRecordList'
+import InfluencerForm from '@/features/influencer/components/InfluencerForm'
+import InfluencerDetail from '@/features/influencer/components/InfluencerDetail'
+import ContactRecordList from '@/features/contact-record/components/ContactRecordList'
 
 const { Search } = Input
 const { Title } = Typography
