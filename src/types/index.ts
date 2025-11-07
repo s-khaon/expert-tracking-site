@@ -394,3 +394,94 @@ export interface ContactRecordSearchParams extends PaginationParams {
   start_date?: string
   end_date?: string
 }
+
+// 合作商品相关类型
+export interface CooperationProduct {
+  id: number
+  cooperation_record_id: number
+  influencer_id: number
+  contact_record_id?: number
+  product_name: string
+  product_code: string
+  price: number
+  commission_rate?: number
+  cooperation_platform?: string
+  order_number?: string
+  external_number?: string
+  notes?: string
+  cooperation_time?: string
+  created_at: string
+  updated_at: string
+  created_by?: number
+  updated_by?: number
+}
+
+export interface CooperationProductCreate {
+  influencer_id: number
+  contact_record_id?: number
+  product_name: string
+  product_code: string
+  price: number
+  commission_rate?: number
+  cooperation_platform?: string
+  order_number?: string
+  external_number?: string
+  notes?: string
+  cooperation_time?: string
+}
+
+export interface CooperationProductUpdate {
+  product_name?: string
+  product_code?: string
+  price?: number
+  commission_rate?: number
+  cooperation_platform?: string
+  order_number?: string
+  external_number?: string
+  notes?: string
+  cooperation_time?: string
+}
+
+// 合作记录相关类型
+export interface CooperationRecord {
+  id: number
+  influencer_id: number
+  contact_record_id?: number
+  cooperation_status: number
+  notes?: string
+  created_at: string
+  updated_at: string
+  created_by?: number
+  updated_by?: number
+  products: CooperationProduct[]
+}
+
+export interface CooperationRecordDetail extends CooperationRecord {
+  influencer_name?: string
+  contact_record_type?: string
+}
+
+export interface CooperationRecordCreate {
+  influencer_id: number
+  contact_record_id?: number
+  cooperation_status?: number
+  notes?: string
+  products?: CooperationProductCreate[]
+}
+
+export interface CooperationRecordUpdate {
+  cooperation_status?: number
+  notes?: string
+}
+
+export interface CooperationRecordListResponse extends PaginatedResponse<CooperationRecordDetail> {}
+
+export interface CooperationRecordSearchParams extends PaginationParams {
+  cooperation_status?: number
+  influencer_id?: number
+  contact_record_id?: number
+  start_date?: string
+  end_date?: string
+  order_by?: string
+  order_direction?: 'asc' | 'desc'
+}

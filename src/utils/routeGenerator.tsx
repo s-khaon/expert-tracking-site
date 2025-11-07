@@ -11,6 +11,7 @@ const RoleManagement = lazy(() => import('@pages/RoleManagement'))
 const MenuManagement = lazy(() => import('@pages/MenuManagement'))
 const InfluencerManagement = lazy(() => import('@pages/InfluencerManagement'))
 const ContactRecordManagement = lazy(() => import('@pages/ContactRecordManagement'))
+const CooperationRecordManagement = lazy(() => import('@pages/CooperationRecordManagement'))
 
 // 组件映射表 - 将菜单的component字段映射到实际的React组件
 const componentMap: Record<string, React.ComponentType> = {
@@ -21,6 +22,7 @@ const componentMap: Record<string, React.ComponentType> = {
   'MenuManagement': MenuManagement,
   'InfluencerManagement': InfluencerManagement,
   'ContactRecordManagement': ContactRecordManagement,
+  'CooperationRecordManagement': CooperationRecordManagement,
 }
 
 /**

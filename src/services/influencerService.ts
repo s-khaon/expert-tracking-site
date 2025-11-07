@@ -1,10 +1,9 @@
-import type { 
-  Influencer, 
-  InfluencerCreate, 
-  InfluencerUpdate, 
+import type {
+  Influencer,
+  InfluencerCreate,
   InfluencerListResponse,
-  InfluencerSimple,
-  InfluencerSearchParams 
+  InfluencerSearchParams,
+  InfluencerUpdate,
 } from '../types'
 import api from './api'
 
@@ -45,26 +44,29 @@ export const influencerService = {
   },
 
   // 根据状态获取达人列表
-  getInfluencersByStatus: async (status: string, params?: InfluencerSearchParams): Promise<InfluencerListResponse> => {
+  getInfluencersByStatus: async (
+    status: string,
+    params?: InfluencerSearchParams
+  ): Promise<InfluencerListResponse> => {
     const response = await api.get(`/influencers/status/${status}`, { params })
     return response.data
   },
 
   // 根据优先级获取达人列表
-  getInfluencersByPriority: async (priority: string, params?: InfluencerSearchParams): Promise<InfluencerListResponse> => {
+  getInfluencersByPriority: async (
+    priority: string,
+    params?: InfluencerSearchParams
+  ): Promise<InfluencerListResponse> => {
     const response = await api.get(`/influencers/priority/${priority}`, { params })
     return response.data
   },
 
   // 根据平台搜索达人
-  searchInfluencersByPlatform: async (platform: string, params?: InfluencerSearchParams): Promise<InfluencerListResponse> => {
+  searchInfluencersByPlatform: async (
+    platform: string,
+    params?: InfluencerSearchParams
+  ): Promise<InfluencerListResponse> => {
     const response = await api.get(`/influencers/platform/${platform}`, { params })
-    return response.data
-  },
-
-  // 获取简化的达人列表（用于下拉选择等）
-  getInfluencersSimple: async (): Promise<InfluencerSimple[]> => {
-    const response = await api.get('/influencers/simple')
     return response.data
   },
 
@@ -80,11 +82,11 @@ export const influencerService = {
 
   // 导出达人信息
   exportInfluencers: async (params?: InfluencerSearchParams): Promise<void> => {
-    const response = await api.get('/influencers/export', { 
+    const response = await api.get('/influencers/export', {
       params,
-      responseType: 'blob'
+      responseType: 'blob',
     })
-    
+
     // 创建下载链接
     const blob = new Blob([response.data], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
@@ -95,5 +97,5 @@ export const influencerService = {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-  }
+  },
 }

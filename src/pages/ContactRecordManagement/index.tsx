@@ -37,6 +37,7 @@ import { contactRecordService } from '@/services/contactRecordService'
 import { influencerService } from '@/services/influencerService'
 import ContactRecordForm from '@/features/contact-record/components/ContactRecordForm'
 import ContactRecordDetail from '@/features/contact-record/components/ContactRecordDetail'
+import CooperationRecordForm from '@/features/cooperation-record/components/CooperationRecordForm'
 
 const { RangePicker } = DatePicker
 const { Option } = Select
@@ -68,6 +69,10 @@ const ContactRecordManagement: React.FC = () => {
     by_result: {} as Record<string, number>,
     pending_follow_up: 0
   })
+
+  // 合作记录创建弹窗
+  const [cooperationFormVisible, setCooperationFormVisible] = useState(false)
+  const [cooperationContext, setCooperationContext] = useState<{ influencer_id: number; contact_record_id: number } | null>(null)
 
   // 获取建联记录列表
   const fetchRecords = async (params?: Partial<ContactRecordSearchParams>) => {
@@ -176,6 +181,11 @@ const ContactRecordManagement: React.FC = () => {
     } catch (error) {
       message.error('删除失败')
     }
+  }
+
+  const handleCreateCooperationRecord = (record: ContactRecord) => {
+    setCooperationContext({ influencer_id: record.influencer_id, contact_record_id: record.id })
+    setCooperationFormVisible(true)
   }
 
   const handleFormSuccess = () => {
@@ -390,6 +400,13 @@ const ContactRecordManagement: React.FC = () => {
             onClick={() => handleEdit(record)}
           >
             编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => handleCreateCooperationRecord(record)}
+          >
+            创建合作记录
           </Button>
           {record.follow_up_required === 'yes' && (
             <Button
@@ -755,6 +772,30 @@ const ContactRecordManagement: React.FC = () => {
               handleEdit(viewingRecord)
             }}
             onClose={() => setDetailVisible(false)}
+          />
+        )}
+      </Modal>
+
+      {/* 创建合作记录弹窗 */}
+      <Modal
+        title="创建合作记录"
+        open={cooperationFormVisible}
+        onCancel={() => setCooperationFormVisible(false)}
+        footer={null}
+        width={900}
+        destroyOnHidden
+      >
+        {cooperationContext && (
+          <CooperationRecordForm
+            influencerId={cooperationContext.influencer_id}
+            contactRecordId={cooperationContext.contact_record_id}
+            record={null}
+            onSuccess={() => {
+              setCooperationFormVisible(false)
+              setCooperationContext(null)
+              message.success('已创建合作记录')
+            }}
+            onCancel={() => setCooperationFormVisible(false)}
           />
         )}
       </Modal>
