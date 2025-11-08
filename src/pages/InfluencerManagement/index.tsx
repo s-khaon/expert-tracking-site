@@ -179,9 +179,20 @@ const InfluencerManagement: React.FC = () => {
     }
   }
 
-
-
-  // 表格列定义
+  // 从飞书同步达人信息
+  const handleSyncFromFeishu = async () => {
+    try {
+      setLoading(true)
+      const result = await influencerService.syncFromFeishu()
+      message.success(`同步完成：新增 ${result.added}，更新 ${result.updated}，跳过 ${result.skipped}`)
+      fetchInfluencers()
+    } catch (error) {
+      message.error('同步失败')
+    } finally {
+      setLoading(false)
+    }
+  }
+// 表格列定义
   const columns: ColumnsType<Influencer> = [
     {
       title: 'ID',
@@ -354,7 +365,13 @@ const InfluencerManagement: React.FC = () => {
                 >
                   导出
                 </Button>
-              </Space>
+                <Button
+                  onClick={handleSyncFromFeishu}
+                  loading={loading}
+                >
+                  从飞书同步
+                </Button>
+            </Space>
             </Col>
           </Row>
         </div>

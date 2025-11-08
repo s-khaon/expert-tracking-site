@@ -94,4 +94,19 @@ export const cooperationRecordService = {
     const response = await api.get('/cooperation-records/stats/overview', { params })
     return response.data
   }
+  ,
+  // 导入合作结果文件并匹配达人
+  importCooperationResults: async (file: File, similarityThreshold: number = 0.8): Promise<{
+    exact_success: Array<{ import_nickname: string; influencer_id: number; influencer_name: string; influencer_nickname: string }>
+    similar_possible_success: Array<{ import_nickname: string; influencer_id: number; influencer_name: string; influencer_nickname: string; similarity: number }>
+    unmatched: Array<{ import_nickname: string }>
+  }> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('similarity_threshold', String(similarityThreshold))
+    const response = await api.post('/cooperation-records/import-results', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data
+  }
 }

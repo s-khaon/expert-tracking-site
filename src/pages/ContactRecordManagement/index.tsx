@@ -44,6 +44,20 @@ const { Option } = Select
 const { Text } = Typography
 
 const ContactRecordManagement: React.FC = () => {
+  // 从飞书同步建联记录
+  const handleSyncFromFeishu = async () => {
+    try {
+      setLoading(true)
+      const result = await contactRecordService.syncFromFeishu()
+      message.success(`同步完成：新增 ${result.added}，更新 ${result.updated}，跳过 ${result.skipped}，补建达人 ${result.unknown_influencer}`)
+      fetchRecords()
+      fetchStatistics()
+    } catch (error) {
+      message.error('同步失败')
+    } finally {
+      setLoading(false)
+    }
+  }
   const [records, setRecords] = useState<ContactRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [formVisible, setFormVisible] = useState(false)
@@ -259,7 +273,6 @@ const ContactRecordManagement: React.FC = () => {
     }
     return texts[result as keyof typeof texts] || result
   }
-
   const columns: ColumnsType<ContactRecord> = [
     {
       title: '达人',
@@ -523,7 +536,8 @@ const ContactRecordManagement: React.FC = () => {
                   >
                     编辑
                   </Button>
-                </Space>
+                <Button onClick={handleSyncFromFeishu} loading={loading}>从飞书同步</Button>
+            </Space>
               </div>
             </Card>
           </Timeline.Item>
@@ -640,6 +654,7 @@ const ContactRecordManagement: React.FC = () => {
               <Button icon={<ReloadOutlined />} onClick={handleReset}>
                 重置
               </Button>
+                <Button onClick={handleSyncFromFeishu} loading={loading}>从飞书同步</Button>
             </Space>
           </Col>
         </Row>
@@ -703,7 +718,8 @@ const ContactRecordManagement: React.FC = () => {
           >
             导出数据
           </Button>
-        </Space>
+                <Button onClick={handleSyncFromFeishu} loading={loading}>从飞书同步</Button>
+            </Space>
       </Card>
 
       {/* 数据展示区域 */}
@@ -804,3 +820,5 @@ const ContactRecordManagement: React.FC = () => {
 }
 
 export default ContactRecordManagement
+
+

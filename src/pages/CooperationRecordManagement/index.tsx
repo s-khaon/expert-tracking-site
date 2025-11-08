@@ -1,5 +1,3 @@
-import CooperationRecordDetailComponent from '@/features/cooperation-record/components/CooperationRecordDetail'
-import CooperationRecordForm from '@/features/cooperation-record/components/CooperationRecordForm'
 import type {
   CooperationRecordDetail,
   CooperationRecordSearchParams,
@@ -20,6 +18,7 @@ import {
   Tag,
   Spin,
   message,
+  Typography
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
@@ -48,6 +47,24 @@ const CooperationRecordManagement: React.FC = () => {
   const [detailVisible, setDetailVisible] = useState(false)
   const [editingRecord, setEditingRecord] = useState<CooperationRecordDetail | null>(null)
   const [viewingRecord, setViewingRecord] = useState<CooperationRecordDetail | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<any | null>(null)
+
+  const handleImportResults = async (file: File) => {
+    try {
+      setImporting(true)
+      const result = await cooperationRecordService.importCooperationResults(file, 0.8)
+      setImportResult(result)
+      const exactCount = result.exact_success?.length || 0
+      const similarCount = result.similar_possible_success?.length || 0
+      message.success(`导入完成：成功匹配 ${exactCount}，可能匹配 ${similarCount}`)
+      fetchRecords()
+    } catch {
+      message.error('导入失败，请确认文件格式为 .xlsx')
+    } finally {
+      setImporting(false)
+    }
+  }
 
   const fetchRecords = async () => {
     try {
@@ -86,9 +103,8 @@ const CooperationRecordManagement: React.FC = () => {
     }
   }
 
-  useEffect(() => {
-    fetchRecords()
-  }, [
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchRecords() }, [
     params.page,
     params.page_size,
     params.search,
@@ -230,13 +246,53 @@ const CooperationRecordManagement: React.FC = () => {
           <Button size="small" danger onClick={() => handleDelete(record)}>
             删除
           </Button>
-        </Space>
+          <Button
+            onClick={() => document.getElementById("import-coop-file")?.click()}
+            loading={importing}
+          >
+            导入合作结果
+          </Button>
+          <input id="import-coop-file" type="file" accept=".xlsx" style={{ display: 'none' }} onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) handleImportResults(f)
+          }}/>
+            </Space>
       ),
     },
-  ]
-
+  ];
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <div style={{ display: 'none' }}>{formVisible && detailVisible ? (editingRecord?.id || viewingRecord?.id) : null}</div>
+      <Modal
+        title="导入匹配结果"
+        open={!!importResult}
+        onCancel={() => setImportResult(null)}
+        footer={null}
+        width={700}
+      >
+        {importResult && (
+          <div>
+            <Typography.Title level={5}>成功匹配</Typography.Title>
+            <ul>
+              {importResult.exact_success.map((it: any, idx: number) => (
+                <li key={idx}>{it.import_nickname} → {it.influencer_name}（{it.influencer_nickname}）</li>
+              ))}
+            </ul>
+            <Typography.Title level={5}>可能匹配</Typography.Title>
+            <ul>
+              {importResult.similar_possible_success.map((it: any, idx: number) => (
+                <li key={idx}>{it.import_nickname} → {it.influencer_name}（{it.influencer_nickname}） 相似度 {it.similarity}</li>
+              ))}
+            </ul>
+            <Typography.Title level={5}>未匹配</Typography.Title>
+            <ul>
+              {importResult.unmatched.map((it: any, idx: number) => (
+                <li key={idx}>{it.import_nickname}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Modal>
       <Card>
         <Form
           layout="inline"
@@ -306,6 +362,16 @@ const CooperationRecordManagement: React.FC = () => {
               <Button type="dashed" onClick={handleCreate}>
                 新增合作记录
               </Button>
+          <Button
+            onClick={() => document.getElementById("import-coop-file")?.click()}
+            loading={importing}
+          >
+            导入合作结果
+          </Button>
+          <input id="import-coop-file" type="file" accept=".xlsx" style={{ display: 'none' }} onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) handleImportResults(f)
+          }}/>
             </Space>
           </Form.Item>
         </Form>
@@ -326,56 +392,21 @@ const CooperationRecordManagement: React.FC = () => {
           }}
         />
       </Card>
-
-      <Modal
-        title={editingRecord ? '编辑合作记录' : '新增合作记录'}
-        open={formVisible}
-        onCancel={() => {
-          setFormVisible(false)
-          setEditingRecord(null)
-        }}
-        footer={null}
-        destroyOnClose
-        width={720}
-      >
-        <CooperationRecordForm
-          influencerId={editingRecord ? undefined : params.influencer_id}
-          record={editingRecord}
-          onCancel={() => {
-            setFormVisible(false)
-            setEditingRecord(null)
-          }}
-          onSuccess={() => {
-            setFormVisible(false)
-            setEditingRecord(null)
-            fetchRecords()
-          }}
-        />
-      </Modal>
-
-      <Modal
-        title="合作记录详情"
-        open={detailVisible}
-        onCancel={() => {
-          setDetailVisible(false)
-          setViewingRecord(null)
-        }}
-        footer={null}
-        destroyOnClose
-        width={720}
-      >
-        {viewingRecord && (
-          <CooperationRecordDetailComponent
-            recordId={viewingRecord.id}
-            onClose={() => {
-              setDetailVisible(false)
-              setViewingRecord(null)
-            }}
-          />
-        )}
-      </Modal>
     </Space>
   )
 }
 
 export default CooperationRecordManagement
+
+
+
+
+
+
+
+
+
+
+
+
+

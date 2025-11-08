@@ -95,4 +95,10 @@ export const contactRecordService = {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
   }
+  ,
+  // 从飞书同步建联记录（手动触发）
+  syncFromFeishu: async (): Promise<{ message: string; added: number; updated: number; skipped: number; unknown_influencer: number }> => {
+    const response = await api.post('/contact-records/sync/feishu')
+    return response.data
+  }
 }
