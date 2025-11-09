@@ -23,6 +23,7 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import React, { useEffect, useRef, useState } from 'react'
+import CooperationRecordForm from '@/features/cooperation-record/components/CooperationRecordForm'
 
 const { RangePicker } = DatePicker
 
@@ -30,6 +31,7 @@ const { RangePicker } = DatePicker
 const statusColors: string[] = ['orange','blue','purple','green','red']
 const statusLabels: string[] = ['待确认','已确认','进行中','已完成','已取消']
 const CooperationRecordManagement: React.FC = () => {
+  const [form] = Form.useForm() // 添加表单实例
   const [loading, setLoading] = useState(false)
   const [records, setRecords] = useState<CooperationRecordDetail[]>([])
   const [total, setTotal] = useState(0)
@@ -49,6 +51,9 @@ const CooperationRecordManagement: React.FC = () => {
   const [viewingRecord, setViewingRecord] = useState<CooperationRecordDetail | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<any | null>(null)
+  // 创建合作记录弹窗状态
+  const [cooperationFormVisible, setCooperationFormVisible] = useState(false)
+  const [cooperationContext, setCooperationContext] = useState<{ influencer_id: number } | null>(null)
 
   const handleImportResults = async (file: File) => {
     try {
@@ -114,7 +119,7 @@ const CooperationRecordManagement: React.FC = () => {
     params.end_date,
   ])
 
-  const handleInfluencerDropdownVisibleChange = (open: boolean) => {
+  const handleInfluencerOpenChange = (open: boolean) => { // 修改方法名
     if (open && influencerOptions.length === 0) {
       setInfluencerQuery('')
       fetchInfluencers('', 1, false)
@@ -153,16 +158,19 @@ const CooperationRecordManagement: React.FC = () => {
 
   const handleReset = () => {
     setParams({ page: 1, page_size: params.page_size })
+    form.resetFields(['search','influencer_id','cooperation_status','dateRange']) // 同步清空筛选区显示
   }
 
   const handleCreate = () => {
     // 创建合作记录需先选择达人
-    if (!params.influencer_id) {
+    const selectedInfluencer = form.getFieldValue('influencer_id') ?? params.influencer_id // 修改校验逻辑
+    if (!selectedInfluencer) {
       message.warning('请先在筛选区域选择达人，再创建合作记录')
       return
     }
     setEditingRecord(null)
-    setFormVisible(true)
+    setCooperationContext({ influencer_id: selectedInfluencer })
+    setCooperationFormVisible(true)
   }
 
   const handleEdit = (record: CooperationRecordDetail) => {
@@ -293,8 +301,32 @@ const CooperationRecordManagement: React.FC = () => {
           </div>
         )}
       </Modal>
+      {/* 创建合作记录弹窗 */}
+      <Modal
+        title="创建合作记录"
+        open={cooperationFormVisible}
+        onCancel={() => setCooperationFormVisible(false)}
+        footer={null}
+        width={900}
+        destroyOnHidden
+      >
+        {cooperationContext && (
+          <CooperationRecordForm
+            influencerId={cooperationContext.influencer_id}
+            record={null}
+            onSuccess={() => {
+              setCooperationFormVisible(false)
+              setCooperationContext(null)
+              message.success('已创建合作记录')
+              fetchRecords()
+            }}
+            onCancel={() => setCooperationFormVisible(false)}
+          />
+        )}
+      </Modal>
       <Card>
         <Form
+          form={form} // 绑定表单实例
           layout="inline"
           onFinish={handleSearch}
           initialValues={{ page_size: params.page_size }}
@@ -318,7 +350,7 @@ const CooperationRecordManagement: React.FC = () => {
                 value: i.id,
               }))}
               onSearch={handleInfluencerSearch}
-              onDropdownVisibleChange={handleInfluencerDropdownVisibleChange}
+              onOpenChange={handleInfluencerOpenChange} // 修改事件绑定
               notFoundContent={influencerLoading ? <Spin size="small" /> : null}
               dropdownRender={menu => (
                 <div>
