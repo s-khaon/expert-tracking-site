@@ -352,9 +352,9 @@ const CooperationRecordManagement: React.FC = () => {
               onSearch={handleInfluencerSearch}
               onOpenChange={handleInfluencerOpenChange} // 修改事件绑定
               notFoundContent={influencerLoading ? <Spin size="small" /> : null}
-              dropdownRender={menu => (
+              popupRender={originNode => (
                 <div>
-                  {menu}
+                  {originNode}
                   <div style={{ display: 'flex', justifyContent: 'center', padding: 8 }}>
                     <Button
                       size="small"

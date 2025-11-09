@@ -54,6 +54,7 @@ const ContactRecordManagement: React.FC = () => {
       fetchStatistics()
     } catch (error) {
       message.error('同步失败')
+      console.error('同步失败', error)
     } finally {
       setLoading(false)
     }
@@ -103,6 +104,7 @@ const ContactRecordManagement: React.FC = () => {
       }))
     } catch (error) {
       message.error('获取建联记录失败')
+      console.error('获取建联记录失败', error)
     } finally {
       setLoading(false)
     }
@@ -132,7 +134,7 @@ const ContactRecordManagement: React.FC = () => {
       
       setInfluencerOptions(options)
     } catch (error) {
-      console.error('搜索达人失败')
+      console.error('搜索达人失败', error)
       setInfluencerOptions([])
     } finally {
       setInfluencerSearchLoading(false)
@@ -145,7 +147,8 @@ const ContactRecordManagement: React.FC = () => {
       const stats = await contactRecordService.getContactRecordStats()
       setStatistics(stats)
     } catch (error) {
-      console.error('获取统计数据失败')
+      console.error('获取统计数据失败', error)
+      message.error('获取统计数据失败')
     }
   }
 
@@ -194,6 +197,7 @@ const ContactRecordManagement: React.FC = () => {
       fetchStatistics()
     } catch (error) {
       message.error('删除失败')
+      console.error('删除失败', error)
     }
   }
 
@@ -218,6 +222,7 @@ const ContactRecordManagement: React.FC = () => {
       fetchStatistics()
     } catch (error) {
       message.error('操作失败')
+      console.error('操作失败', error)
     }
   }
 
@@ -227,6 +232,7 @@ const ContactRecordManagement: React.FC = () => {
       message.success('导出成功')
     } catch (error) {
       message.error('导出失败')
+      console.error('导出失败', error)
     }
   }
 
