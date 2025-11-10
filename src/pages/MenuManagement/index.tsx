@@ -20,12 +20,14 @@ import {
   Switch,
   Table,
   Tag,
+  Select,
   TreeSelect,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import React, { useEffect, useState } from 'react'
 import { menuService } from '../../services/menuService'
 import type { Menu, MenuCreate, MenuUpdate } from '../../types'
+import { availableComponents } from '../../utils/routeGenerator'
 
 const MenuManagement: React.FC = () => {
   const [menus, setMenus] = useState<Menu[]>([])
@@ -42,7 +44,7 @@ const MenuManagement: React.FC = () => {
       const response = await menuService.getMenuTree(true)
       setMenus(response)
       setAllMenus(response)
-    } catch (error) {
+    } catch {
       message.error('获取菜单列表失败')
     } finally {
       setLoading(false)
@@ -77,16 +79,19 @@ const MenuManagement: React.FC = () => {
   // 提交表单
   const handleSubmit = async (values: MenuCreate | MenuUpdate) => {
     try {
+      // 后端要求 title 为必填；如未提供则用 name 代填
+      const title = (values as any).title ?? (values as any).name
+
       if (editingMenu) {
-        await menuService.updateMenu(editingMenu.id, values)
+        await menuService.updateMenu(editingMenu.id, { ...values, title })
         message.success('菜单更新成功')
       } else {
-        await menuService.createMenu(values as MenuCreate)
+        await menuService.createMenu({ ...(values as MenuCreate), title })
         message.success('菜单创建成功')
       }
       closeModal()
       fetchMenus()
-    } catch (error) {
+    } catch {
       message.error(editingMenu ? '菜单更新失败' : '菜单创建失败')
     }
   }
@@ -97,7 +102,7 @@ const MenuManagement: React.FC = () => {
       await menuService.deleteMenu(id)
       message.success('菜单删除成功')
       fetchMenus()
-    } catch (error) {
+    } catch {
       message.error('菜单删除失败')
     }
   }
@@ -275,6 +280,16 @@ const MenuManagement: React.FC = () => {
 
           <Form.Item name="icon" label="菜单图标">
             <Input placeholder="请输入图标名称，如：UserOutlined" />
+          </Form.Item>
+
+          <Form.Item name="component" label="组件路径">
+            <Select
+              placeholder="请选择组件"
+              allowClear
+              showSearch
+              options={availableComponents.map(c => ({ label: c, value: c }))}
+              optionFilterProp="label"
+            />
           </Form.Item>
 
           <Form.Item name="description" label="菜单描述">

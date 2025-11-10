@@ -198,6 +198,7 @@ export interface Menu {
 
 export interface MenuCreate {
   name: string
+  title: string
   path?: string
   icon?: string
   component?: string
@@ -208,6 +209,7 @@ export interface MenuCreate {
 
 export interface MenuUpdate {
   name?: string
+  title?: string
   path?: string
   icon?: string
   component?: string

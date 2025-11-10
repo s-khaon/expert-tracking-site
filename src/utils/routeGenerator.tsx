@@ -12,6 +12,7 @@ const MenuManagement = lazy(() => import('@pages/MenuManagement'))
 const InfluencerManagement = lazy(() => import('@pages/InfluencerManagement'))
 const ContactRecordManagement = lazy(() => import('@pages/ContactRecordManagement'))
 const CooperationRecordManagement = lazy(() => import('@pages/CooperationRecordManagement'))
+const CooperationProductManagement = lazy(() => import('@pages/CooperationProductManagement'))
 
 // 组件映射表 - 将菜单的component字段映射到实际的React组件
 const componentMap: Record<string, React.ComponentType> = {
@@ -23,7 +24,13 @@ const componentMap: Record<string, React.ComponentType> = {
   'InfluencerManagement': InfluencerManagement,
   'ContactRecordManagement': ContactRecordManagement,
   'CooperationRecordManagement': CooperationRecordManagement,
+  'CooperationProductManagement': CooperationProductManagement,
+  // Alias for clarity: allow using 'ProductManagement' as component name
+  'ProductManagement': CooperationProductManagement,
 }
+
+// 导出可选组件名称列表，供菜单管理页面的下拉选择使用
+export const availableComponents = Object.keys(componentMap)
 
 /**
  * 根据菜单数据生成路由配置
