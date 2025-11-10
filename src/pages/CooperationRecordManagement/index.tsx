@@ -51,9 +51,8 @@ const CooperationRecordManagement: React.FC = () => {
   const [viewingRecord, setViewingRecord] = useState<CooperationRecordDetail | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<any | null>(null)
-  // 创建合作记录弹窗状态
-  const [cooperationFormVisible, setCooperationFormVisible] = useState(false)
   const [cooperationContext, setCooperationContext] = useState<{ influencer_id: number } | null>(null)
+
 
   const handleImportResults = async (file: File) => {
     try {
@@ -170,7 +169,7 @@ const CooperationRecordManagement: React.FC = () => {
     }
     setEditingRecord(null)
     setCooperationContext({ influencer_id: selectedInfluencer })
-    setCooperationFormVisible(true)
+    setFormVisible(true)
   }
 
   const handleEdit = (record: CooperationRecordDetail) => {
@@ -254,17 +253,7 @@ const CooperationRecordManagement: React.FC = () => {
           <Button size="small" danger onClick={() => handleDelete(record)}>
             删除
           </Button>
-          <Button
-            onClick={() => document.getElementById("import-coop-file")?.click()}
-            loading={importing}
-          >
-            导入合作结果
-          </Button>
-          <input id="import-coop-file" type="file" accept=".xlsx" style={{ display: 'none' }} onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) handleImportResults(f)
-          }}/>
-            </Space>
+        </Space>
       ),
     },
   ];
@@ -301,26 +290,37 @@ const CooperationRecordManagement: React.FC = () => {
           </div>
         )}
       </Modal>
-      {/* 创建合作记录弹窗 */}
+      {/* 编辑/创建合作记录弹窗 */}
       <Modal
-        title="创建合作记录"
-        open={cooperationFormVisible}
-        onCancel={() => setCooperationFormVisible(false)}
+        title={editingRecord ? '编辑合作记录' : '创建合作记录'}
+        open={formVisible}
+        onCancel={() => {
+          setFormVisible(false)
+          setEditingRecord(null)
+          setCooperationContext(null)
+        }}
         footer={null}
         width={900}
         destroyOnHidden
       >
-        {cooperationContext && (
+        {(editingRecord || cooperationContext) && (
           <CooperationRecordForm
-            influencerId={cooperationContext.influencer_id}
-            record={null}
-            onSuccess={() => {
-              setCooperationFormVisible(false)
+            influencerId={editingRecord?.influencer_id || cooperationContext?.influencer_id}
+            record={editingRecord || null}
+            onSuccess={(record) => {
+              setFormVisible(false)
+              setEditingRecord(null)
               setCooperationContext(null)
-              message.success('已创建合作记录')
+              const actionText = editingRecord ? '已更新合作记录' : '已创建合作记录'
+              const info = record ? `（状态：${record.cooperation_status}，商品数：${record.products?.length || 0}）` : ''
+              message.success(`${actionText}${info}`)
               fetchRecords()
             }}
-            onCancel={() => setCooperationFormVisible(false)}
+            onCancel={() => {
+              setFormVisible(false)
+              setEditingRecord(null)
+              setCooperationContext(null)
+            }}
           />
         )}
       </Modal>

@@ -812,10 +812,11 @@ const ContactRecordManagement: React.FC = () => {
             influencerId={cooperationContext.influencer_id}
             contactRecordId={cooperationContext.contact_record_id}
             record={null}
-            onSuccess={() => {
+            onSuccess={(record) => {
               setCooperationFormVisible(false)
               setCooperationContext(null)
-              message.success('已创建合作记录')
+              const info = record ? `（状态：${record.cooperation_status}，商品数：${record.products?.length || 0}）` : ''
+              message.success(`已创建合作记录${info}`)
             }}
             onCancel={() => setCooperationFormVisible(false)}
           />
