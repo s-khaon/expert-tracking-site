@@ -7,7 +7,9 @@ import type {
   CooperationRecordSearchParams,
   CooperationProduct,
   CooperationProductCreate,
-  CooperationProductUpdate
+  CooperationProductUpdate,
+  CooperationProductListResponse,
+  CooperationProductSearchParams
 } from '../types'
 import api from './api'
 
@@ -81,6 +83,25 @@ export const cooperationRecordService = {
   // 删除合作商品
   deleteCooperationProduct: async (productId: number): Promise<void> => {
     await api.delete(`/cooperation-records/products/${productId}`)
+  },
+
+  // 全局分页搜索合作商品（用于远程下拉与管理页面）
+  getAllCooperationProducts: async (
+    params?: CooperationProductSearchParams
+  ): Promise<CooperationProductListResponse> => {
+    const response = await api.get('/cooperation-records/products', { params })
+    const data = response.data
+    if (data && typeof data.page_size === 'undefined' && typeof data.size !== 'undefined') {
+      data.page_size = data.size
+      delete data.size
+    }
+    return data
+  },
+
+  // 根据ID获取合作商品详情
+  getCooperationProductById: async (productId: number): Promise<CooperationProduct> => {
+    const response = await api.get(`/cooperation-records/products/${productId}`)
+    return response.data
   },
 
   // 统计信息

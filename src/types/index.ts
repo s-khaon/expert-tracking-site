@@ -485,3 +485,13 @@ export interface CooperationRecordSearchParams extends PaginationParams {
   order_by?: string
   order_direction?: 'asc' | 'desc'
 }
+
+// 合作商品分页响应与搜索参数
+export interface CooperationProductListResponse extends PaginatedResponse<CooperationProduct> {}
+
+export interface CooperationProductSearchParams extends PaginationParams {
+  influencer_id?: number
+  record_id?: number
+  order_by?: string
+  order_direction?: 'asc' | 'desc'
+}
