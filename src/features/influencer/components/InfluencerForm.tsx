@@ -63,7 +63,7 @@ const InfluencerForm: React.FC<InfluencerFormProps> = ({
       }
       
       onSuccess()
-    } catch (error) {
+    } catch {
       message.error(influencer ? '更新达人信息失败' : '创建达人失败')
     } finally {
       setLoading(false)
@@ -77,7 +77,7 @@ const InfluencerForm: React.FC<InfluencerFormProps> = ({
       onFinish={handleSubmit}
       initialValues={{
         is_refund: false,
-        wechat_channels_has_shop: false
+        platforms: []
       }}
     >
       <Card title="基本信息" size="small" style={{ marginBottom: 16 }}>
@@ -117,56 +117,53 @@ const InfluencerForm: React.FC<InfluencerFormProps> = ({
       </Card>
 
       <Card title="平台信息" size="small" style={{ marginBottom: 16 }}>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="douyin_url" label="抖音链接">
-              <Input placeholder="请输入抖音链接" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="douyin_followers" label="抖音粉丝数">
-              <InputNumber
-                placeholder="请输入抖音粉丝数"
-                min={0}
-                style={{ width: '100%' }}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="xiaohongshu_url" label="小红书链接">
-              <Input placeholder="请输入小红书链接" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="xiaohongshu_followers" label="小红书粉丝数">
-              <InputNumber
-                placeholder="请输入小红书粉丝数"
-                min={0}
-                style={{ width: '100%' }}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="wechat_channels_url" label="视频号链接">
-              <Input placeholder="请输入视频号链接" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="wechat_channels_followers" label="视频号粉丝数">
-              <InputNumber
-                placeholder="请输入视频号粉丝数"
-                min={0}
-                style={{ width: '100%' }}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Form.List name="platforms">
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map(({ key, name }) => (
+                <Card key={key} size="small" style={{ marginBottom: 12 }}>
+                  <Row gutter={16}>
+                    <Col span={8}>
+                      <Form.Item name={[name, 'platform_code']} label="平台" rules={[{ required: true, message: '请选择平台' }]}>
+                        <Select placeholder="请选择平台">
+                          <Option value="douyin">抖音</Option>
+                          <Option value="xiaohongshu">小红书</Option>
+                          <Option value="wechat_channels">视频号</Option>
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                      <Form.Item name={[name, 'account_url']} label="账号链接">
+                        <Input placeholder="请输入账号链接" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                      <Form.Item name={[name, 'followers']} label="粉丝数">
+                        <InputNumber placeholder="请输入粉丝数" min={0} style={{ width: '100%' }} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={16}>
+                    <Col span={8}>
+                      <Form.Item name={[name, 'has_shop']} label="是否有橱窗">
+                        <Select placeholder="请选择">
+                          <Option value={true}>有橱窗</Option>
+                          <Option value={false}>无橱窗</Option>
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col span={16} style={{ textAlign: 'right' }}>
+                      <Button danger onClick={() => remove(name)}>删除平台</Button>
+                    </Col>
+                  </Row>
+                </Card>
+              ))}
+              <Button type="dashed" onClick={() => add()} block>
+                添加平台
+              </Button>
+            </>
+          )}
+        </Form.List>
       </Card>
 
       <Card title="商务信息" size="small" style={{ marginBottom: 16 }}>
@@ -207,14 +204,7 @@ const InfluencerForm: React.FC<InfluencerFormProps> = ({
               </Select>
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item name="wechat_channels_has_shop" label="视频号是否有橱窗">
-              <Select placeholder="请选择是否有橱窗">
-                <Option value={true}>有橱窗</Option>
-                <Option value={false}>无橱窗</Option>
-              </Select>
-            </Form.Item>
-          </Col>
+          {/* 橱窗属性已移至平台项（视频号） */}
         </Row>
       </Card>
 

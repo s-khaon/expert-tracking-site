@@ -114,81 +114,49 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({ influencer, onEdit,
       {/* 平台数据统计卡片 */}
       <Card title="平台数据统计" style={{ marginBottom: 16 }}>
         <Row gutter={16}>
-          <Col span={8}>
-            <Statistic
-              title="抖音粉丝"
-              value={influencer.douyin_followers || 0}
-              formatter={formatNumber}
-              prefix={<UserOutlined />}
-            />
-          </Col>
-          <Col span={8}>
-            <Statistic
-              title="小红书粉丝"
-              value={influencer.xiaohongshu_followers || 0}
-              formatter={formatNumber}
-              prefix={<UserOutlined />}
-            />
-          </Col>
-          <Col span={8}>
-            <Statistic
-              title="视频号粉丝"
-              value={influencer.wechat_channels_followers || 0}
-              formatter={formatNumber}
-              prefix={<UserOutlined />}
-            />
-          </Col>
+          {(influencer.platforms || []).map((p, idx) => {
+            const label = p.platform_code === 'douyin'
+              ? '抖音粉丝'
+              : p.platform_code === 'xiaohongshu'
+                ? '小红书粉丝'
+                : p.platform_code === 'wechat_channels'
+                  ? '视频号粉丝'
+                  : `${p.platform_code} 粉丝`
+            return (
+              <Col span={8} key={`${influencer.id}-${p.platform_code}-${idx}`}>
+                <Statistic title={label} value={p.followers || 0} formatter={formatNumber} prefix={<UserOutlined />} />
+              </Col>
+            )
+          })}
         </Row>
       </Card>
 
       {/* 平台链接卡片 */}
       <Card title="平台链接" style={{ marginBottom: 16 }}>
         <Descriptions column={1} size="small">
-          <Descriptions.Item
-            label={
-              <>
-                <TikTokOutlined /> 抖音链接
-              </>
-            }
-          >
-            {influencer.douyin_url ? (
-              <a href={influencer.douyin_url} target="_blank" rel="noopener noreferrer">
-                {influencer.douyin_url}
-              </a>
-            ) : (
-              '-'
-            )}
-          </Descriptions.Item>
-          <Descriptions.Item
-            label={
-              <>
-                <InstagramOutlined /> 小红书链接
-              </>
-            }
-          >
-            {influencer.xiaohongshu_url ? (
-              <a href={influencer.xiaohongshu_url} target="_blank" rel="noopener noreferrer">
-                {influencer.xiaohongshu_url}
-              </a>
-            ) : (
-              '-'
-            )}
-          </Descriptions.Item>
-          <Descriptions.Item
-            label={
-              <>
-                <WechatOutlined /> 视频号链接
-              </>
-            }
-          >
-            {influencer.wechat_channels_url ? (
-              <a href={influencer.wechat_channels_url} target="_blank" rel="noopener noreferrer">
-                {influencer.wechat_channels_url}
-              </a>
-            ) : (
-              '-'
-            )}
-          </Descriptions.Item>
+          {(influencer.platforms || []).map((p, idx) => {
+            const labelIcon = p.platform_code === 'douyin'
+              ? <TikTokOutlined />
+              : p.platform_code === 'xiaohongshu'
+                ? <InstagramOutlined />
+                : <WechatOutlined />
+            const labelText = p.platform_code === 'douyin'
+              ? '抖音链接'
+              : p.platform_code === 'xiaohongshu'
+                ? '小红书链接'
+                : p.platform_code === 'wechat_channels'
+                  ? '视频号链接'
+                  : `${p.platform_code} 链接`
+            return (
+              <Descriptions.Item key={`${influencer.id}-${p.platform_code}-${idx}`} label={<><span style={{ marginRight: 4 }}>{labelIcon}</span> {labelText}</>}>
+                {p.account_url ? (
+                  <a href={p.account_url} target="_blank" rel="noopener noreferrer">{p.account_url}</a>
+                ) : (
+                  '-'
+                )}
+              </Descriptions.Item>
+            )
+          })}
         </Descriptions>
       </Card>
 
@@ -217,9 +185,12 @@ const InfluencerDetail: React.FC<InfluencerDetailProps> = ({ influencer, onEdit,
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="视频号小店">
-            <Tag color={influencer.wechat_channels_has_shop ? 'blue' : 'default'}>
-              {influencer.wechat_channels_has_shop ? '有小店' : '无小店'}
-            </Tag>
+            {(() => {
+              const wc = (influencer.platforms || []).find(p => p.platform_code === 'wechat_channels')
+              const val = wc?.has_shop
+              if (val === undefined) return '-'
+              return <Tag color={val ? 'blue' : 'default'}>{val ? '有小店' : '无小店'}</Tag>
+            })()}
           </Descriptions.Item>
         </Descriptions>
       </Card>

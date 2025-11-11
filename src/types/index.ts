@@ -262,29 +262,32 @@ export interface UpdateRoleActionRequest {
   checked_keys: string[]
 }
 
-// 达人管理相关类型
+// 平台项与达人管理相关类型
+export type PlatformCode = 'douyin' | 'xiaohongshu' | 'wechat_channels' | string
+
+export interface PlatformItem {
+  platform_code: PlatformCode
+  account_url?: string
+  followers?: number
+  has_shop?: boolean
+}
+
 export interface Influencer {
   id: number
   name: string
   nickname?: string
   email?: string
   wechat?: string
-  douyin_url?: string
-  xiaohongshu_url?: string
-  wechat_channels_url?: string
-  douyin_followers?: number
-  xiaohongshu_followers?: number
-  wechat_channels_followers?: number
   cooperation_price?: number
   cooperation_types?: string
   is_refund?: boolean
-  wechat_channels_has_shop?: boolean
   description?: string
   internal_notes?: string
   created_at: string
   updated_at: string
   created_by?: number
   updated_by?: number
+  platforms: PlatformItem[]
 }
 
 export interface InfluencerCreate {
@@ -292,18 +295,12 @@ export interface InfluencerCreate {
   nickname?: string
   email?: string
   wechat?: string
-  douyin_url?: string
-  xiaohongshu_url?: string
-  wechat_channels_url?: string
-  douyin_followers?: number
-  xiaohongshu_followers?: number
-  wechat_channels_followers?: number
   cooperation_price?: number
   cooperation_types?: string
   is_refund?: boolean
-  wechat_channels_has_shop?: boolean
   description?: string
   internal_notes?: string
+  platforms?: PlatformItem[]
 }
 
 export interface InfluencerUpdate {
@@ -311,18 +308,12 @@ export interface InfluencerUpdate {
   nickname?: string
   email?: string
   wechat?: string
-  douyin_url?: string
-  xiaohongshu_url?: string
-  wechat_channels_url?: string
-  douyin_followers?: number
-  xiaohongshu_followers?: number
-  wechat_channels_followers?: number
   cooperation_price?: number
   cooperation_types?: string
   is_refund?: boolean
-  wechat_channels_has_shop?: boolean
   description?: string
   internal_notes?: string
+  platforms?: PlatformItem[]
 }
 
 export interface InfluencerSimple {
@@ -383,7 +374,12 @@ export interface ContactRecordListResponse extends PaginatedResponse<ContactReco
 
 // 达人搜索参数
 export interface InfluencerSearchParams extends PaginationParams {
-  name?: string
+  search?: string
+  order_by?: string
+  order_direction?: 'asc' | 'desc'
+  wechat?: string
+  xiaohongshu_id?: string
+  has_wechat_shop?: boolean
   platform?: string
 }
 

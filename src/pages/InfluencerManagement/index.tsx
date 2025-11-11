@@ -60,22 +60,22 @@ const InfluencerManagement: React.FC = () => {
   const [contactInfluencer, setContactInfluencer] = useState<Influencer | null>(null)
 
   // 获取达人列表
-  const fetchInfluencers = async () => {
+  const fetchInfluencers = React.useCallback(async () => {
     try {
       setLoading(true)
       const response = await influencerService.getInfluencers(searchParams)
       setInfluencers(response.items)
       setTotal(response.total)
-    } catch (error) {
+    } catch {
       message.error('获取达人列表失败')
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchParams])
 
   useEffect(() => {
     fetchInfluencers()
-  }, [searchParams])
+  }, [fetchInfluencers])
 
   // 处理搜索
   const handleSearch = (value: string) => {
@@ -98,7 +98,7 @@ const InfluencerManagement: React.FC = () => {
     
     // 字段映射：前端字段名 -> 后端字段名
     const fieldMapping: Record<string, string> = {
-      'followers': 'douyin_followers', // 默认按抖音粉丝数排序
+      'followers': 'followers', // 统一按平台粉丝数（关联表最大值）排序
       'business': 'cooperation_price', // 按报价排序
       'updated_at': 'updated_at',
       'id': 'id'
@@ -133,7 +133,7 @@ const InfluencerManagement: React.FC = () => {
       await influencerService.deleteInfluencer(id)
       message.success('删除达人成功')
       fetchInfluencers()
-    } catch (error) {
+    } catch  {
       message.error('删除达人失败')
     }
   }
@@ -172,7 +172,7 @@ const InfluencerManagement: React.FC = () => {
       setLoading(true)
       await influencerService.exportInfluencers(searchParams)
       message.success('导出成功')
-    } catch (error) {
+    } catch  {
       message.error('导出失败')
     } finally {
       setLoading(false)
@@ -186,7 +186,7 @@ const InfluencerManagement: React.FC = () => {
       const result = await influencerService.syncFromFeishu()
       message.success(`同步完成：新增 ${result.added}，更新 ${result.updated}，跳过 ${result.skipped}`)
       fetchInfluencers()
-    } catch (error) {
+    } catch  {
       message.error('同步失败')
     } finally {
       setLoading(false)
@@ -241,20 +241,23 @@ const InfluencerManagement: React.FC = () => {
     {
       title: '粉丝数据',
       key: 'followers',
-      width: 150,
+      width: 200,
       sorter: true,
       sortDirections: ['descend', 'ascend'],
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
-          {record.douyin_followers && (
-            <div>抖音: {formatFollowersCount(record.douyin_followers)}</div>
-          )}
-          {record.xiaohongshu_followers && (
-            <div>小红书: {formatFollowersCount(record.xiaohongshu_followers)}</div>
-          )}
-          {record.wechat_channels_followers && (
-            <div>视频号: {formatFollowersCount(record.wechat_channels_followers)}</div>
-          )}
+          {(record.platforms || []).map(p => {
+            const label = p.platform_code === 'douyin'
+              ? '抖音'
+              : p.platform_code === 'xiaohongshu'
+                ? '小红书'
+                : p.platform_code === 'wechat_channels'
+                  ? '视频号'
+                  : p.platform_code
+            return (
+              <div key={`${record.id}-${p.platform_code}`}>{label}: {formatFollowersCount(p.followers || 0)}</div>
+            )
+          })}
         </div>
       )
     },
@@ -276,13 +279,18 @@ const InfluencerManagement: React.FC = () => {
               </Tag>
             </div>
           )}
-          {record.wechat_channels_has_shop !== undefined && (
-            <div>
-              <Tag color={record.wechat_channels_has_shop ? 'blue' : 'gray'}>
-                {record.wechat_channels_has_shop ? '有橱窗' : '无橱窗'}
-              </Tag>
-            </div>
-          )}
+          {(() => {
+            const wc = (record.platforms || []).find(p => p.platform_code === 'wechat_channels')
+            const val = wc?.has_shop
+            if (val === undefined) return null
+            return (
+              <div>
+                <Tag color={val ? 'blue' : 'gray'}>
+                  {val ? '有橱窗' : '无橱窗'}
+                </Tag>
+              </div>
+            )
+          })()}
         </div>
       )
     },
