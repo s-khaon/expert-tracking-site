@@ -400,18 +400,12 @@ export interface ContactRecordSearchParams extends PaginationParams {
 // 合作商品相关类型
 export interface CooperationProduct {
   id: number
-  cooperation_record_id: number
-  influencer_id: number
-  contact_record_id?: number
+  cooperation_record_id?: number | null
   product_name: string
   product_code: string
   price: number
   commission_rate?: number
-  cooperation_platform?: string
-  order_number?: string
-  external_number?: string
   notes?: string
-  cooperation_time?: string
   created_at: string
   updated_at: string
   created_by?: number
@@ -419,17 +413,11 @@ export interface CooperationProduct {
 }
 
 export interface CooperationProductCreate {
-  influencer_id: number
-  contact_record_id?: number
   product_name: string
   product_code: string
   price: number
   commission_rate?: number
-  cooperation_platform?: string
-  order_number?: string
-  external_number?: string
   notes?: string
-  cooperation_time?: string
 }
 
 export interface CooperationProductUpdate {
@@ -437,11 +425,7 @@ export interface CooperationProductUpdate {
   product_code?: string
   price?: number
   commission_rate?: number
-  cooperation_platform?: string
-  order_number?: string
-  external_number?: string
   notes?: string
-  cooperation_time?: string
 }
 
 // 合作记录相关类型
@@ -468,7 +452,7 @@ export interface CooperationRecordCreate {
   contact_record_id?: number
   cooperation_status?: number
   notes?: string
-  products?: CooperationProductCreate[]
+  product_ids?: number[]
 }
 
 export interface CooperationRecordUpdate {
@@ -492,7 +476,6 @@ export interface CooperationRecordSearchParams extends PaginationParams {
 export interface CooperationProductListResponse extends PaginatedResponse<CooperationProduct> {}
 
 export interface CooperationProductSearchParams extends PaginationParams {
-  influencer_id?: number
   record_id?: number
   order_by?: string
   order_direction?: 'asc' | 'desc'

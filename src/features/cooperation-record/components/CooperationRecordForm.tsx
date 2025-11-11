@@ -87,19 +87,13 @@ const CooperationRecordForm: React.FC<CooperationRecordFormProps> = props => {
   // 将表单项映射为创建/更新所需的 payload
   const mapFormItemToCreatePayload = useCallback(
     (p: any): CooperationProductCreate => ({
-      influencer_id: influencerId!,
-      contact_record_id: contactRecordId,
       product_name: p.product_name,
       product_code: p.product_code,
       price: p.price,
       commission_rate: p.commission_rate,
-      cooperation_platform: p.cooperation_platform,
-      order_number: p.order_number,
-      external_number: p.external_number,
       notes: p.notes,
-      cooperation_time: p.cooperation_time ? dayjs(p.cooperation_time).toISOString() : undefined,
     }),
-    [influencerId, contactRecordId]
+    []
   )
 
   const mapFormItemToUpdatePayload = useCallback(
@@ -108,11 +102,7 @@ const CooperationRecordForm: React.FC<CooperationRecordFormProps> = props => {
       product_code: p.product_code,
       price: p.price,
       commission_rate: p.commission_rate,
-      cooperation_platform: p.cooperation_platform,
-      order_number: p.order_number,
-      external_number: p.external_number,
       notes: p.notes,
-      cooperation_time: p.cooperation_time ? dayjs(p.cooperation_time).toISOString() : undefined,
     }),
     []
   )
@@ -138,36 +128,23 @@ const CooperationRecordForm: React.FC<CooperationRecordFormProps> = props => {
 
       // 创建模式：一次性创建记录与商品列表
       if (!currentRecord) {
-        // 将多选的已有商品ID映射为创建payload（按当前搜索结果中的详情）
+        // 创建记录并通过 product_ids 关联已选商品
         const selectedIds: number[] = values.selected_product_ids || []
-        const selectedCreates: CooperationProductCreate[] = selectedIds
-          .map(id => {
-            const found = productOptions.find(p => p.id === id)
-            if (!found) return null
-            return {
-              influencer_id: influencerId!,
-              contact_record_id: contactRecordId,
-              product_name: found.product_name,
-              product_code: found.product_code,
-              price: Number(found.price),
-              commission_rate: found.commission_rate ? Number(found.commission_rate) : undefined,
-              cooperation_platform: found.cooperation_platform,
-              order_number: found.order_number,
-              external_number: found.external_number,
-              notes: found.notes,
-              cooperation_time: found.cooperation_time,
-            } as CooperationProductCreate
-          })
-          .filter(Boolean) as CooperationProductCreate[]
-
         const payload: CooperationRecordCreate = {
           influencer_id: influencerId!,
           contact_record_id: contactRecordId,
           cooperation_status: values.cooperation_status,
           notes: values.notes,
-          products: [...selectedCreates, ...newProducts],
+          product_ids: selectedIds,
         }
         const created = await cooperationRecordService.createCooperationRecord(payload)
+
+        // 将本次新增的商品逐个创建并绑定到新建记录上
+        if (newProducts.length > 0) {
+          for (const np of newProducts) {
+            await cooperationRecordService.createCooperationProduct(created.id, np)
+          }
+        }
         message.success('创建合作记录成功')
         onSuccess?.(created)
         return
@@ -254,7 +231,9 @@ const CooperationRecordForm: React.FC<CooperationRecordFormProps> = props => {
             />
           </Form.Item>
           <Space style={{ marginBottom: 12 }}>
-            <Button type="dashed" onClick={() => setNewProductModalOpen(true)}>新增商品</Button>
+            <Button type="dashed" onClick={() => setNewProductModalOpen(true)}>
+              新增商品
+            </Button>
           </Space>
         </>
       ) : (
@@ -327,7 +306,11 @@ const CooperationRecordForm: React.FC<CooperationRecordFormProps> = props => {
                       </Form.Item>
                     </Col>
                     <Col span={6}>
-                      <Form.Item {...field} label="合作时间" name={[field.name, 'cooperation_time']}>
+                      <Form.Item
+                        {...field}
+                        label="合作时间"
+                        name={[field.name, 'cooperation_time']}
+                      >
                         <DatePicker showTime style={{ width: '100%' }} />
                       </Form.Item>
                     </Col>
@@ -370,17 +353,11 @@ const CooperationRecordForm: React.FC<CooperationRecordFormProps> = props => {
             .then(() => {
               const np = form.getFieldValue('new_product') || {}
               const createPayload: CooperationProductCreate = {
-                influencer_id: influencerId!,
-                contact_record_id: contactRecordId,
                 product_name: np.product_name,
                 product_code: np.product_code,
                 price: Number(np.price),
                 commission_rate: np.commission_rate ? Number(np.commission_rate) : undefined,
-                cooperation_platform: np.cooperation_platform,
-                order_number: np.order_number,
-                external_number: np.external_number,
                 notes: np.notes,
-                cooperation_time: np.cooperation_time ? dayjs(np.cooperation_time).toISOString() : undefined,
               }
               setNewProducts(prev => [...prev, createPayload])
               // 清空并关闭
@@ -395,17 +372,29 @@ const CooperationRecordForm: React.FC<CooperationRecordFormProps> = props => {
         <Form layout="vertical" form={form}>
           <Row gutter={12}>
             <Col span={12}>
-              <Form.Item label="商品名称" name={['new_product', 'product_name']} rules={[{ required: true, message: '请输入商品名称' }]}>
+              <Form.Item
+                label="商品名称"
+                name={['new_product', 'product_name']}
+                rules={[{ required: true, message: '请输入商品名称' }]}
+              >
                 <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="商品编号" name={['new_product', 'product_code']} rules={[{ required: true, message: '请输入商品编号' }]}>
+              <Form.Item
+                label="商品编号"
+                name={['new_product', 'product_code']}
+                rules={[{ required: true, message: '请输入商品编号' }]}
+              >
                 <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="价格" name={['new_product', 'price']} rules={[{ required: true, message: '请输入价格' }]}>
+              <Form.Item
+                label="价格"
+                name={['new_product', 'price']}
+                rules={[{ required: true, message: '请输入价格' }]}
+              >
                 <InputNumber min={0} style={{ width: '100%' }} />
               </Form.Item>
             </Col>

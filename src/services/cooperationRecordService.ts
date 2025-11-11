@@ -1,15 +1,15 @@
 import type {
+  CooperationProduct,
+  CooperationProductCreate,
+  CooperationProductListResponse,
+  CooperationProductSearchParams,
+  CooperationProductUpdate,
   CooperationRecord,
   CooperationRecordCreate,
-  CooperationRecordUpdate,
   CooperationRecordDetail,
   CooperationRecordListResponse,
   CooperationRecordSearchParams,
-  CooperationProduct,
-  CooperationProductCreate,
-  CooperationProductUpdate,
-  CooperationProductListResponse,
-  CooperationProductSearchParams
+  CooperationRecordUpdate,
 } from '../types'
 import api from './api'
 
@@ -35,9 +35,7 @@ export const cooperationRecordService = {
   },
 
   // 创建合作记录
-  createCooperationRecord: async (
-    data: CooperationRecordCreate
-  ): Promise<CooperationRecord> => {
+  createCooperationRecord: async (data: CooperationRecordCreate): Promise<CooperationRecord> => {
     const response = await api.post('/cooperation-records/', data)
     return response.data
   },
@@ -67,7 +65,7 @@ export const cooperationRecordService = {
     recordId: number,
     data: CooperationProductCreate
   ): Promise<CooperationProduct> => {
-    const response = await api.post(`/cooperation-records/${recordId}/products`, data)
+    const response = await api.post(`/${recordId}/products`, data)
     return response.data
   },
 
@@ -76,20 +74,20 @@ export const cooperationRecordService = {
     productId: number,
     data: CooperationProductUpdate
   ): Promise<CooperationProduct> => {
-    const response = await api.put(`/cooperation-records/products/${productId}`, data)
+    const response = await api.put(`/products/${productId}`, data)
     return response.data
   },
 
   // 删除合作商品
   deleteCooperationProduct: async (productId: number): Promise<void> => {
-    await api.delete(`/cooperation-records/products/${productId}`)
+    await api.delete(`/products/${productId}`)
   },
 
   // 全局分页搜索合作商品（用于远程下拉与管理页面）
   getAllCooperationProducts: async (
     params?: CooperationProductSearchParams
   ): Promise<CooperationProductListResponse> => {
-    const response = await api.get('/cooperation-records/products', { params })
+    const response = await api.get('/products', { params })
     const data = response.data
     if (data && typeof data.page_size === 'undefined' && typeof data.size !== 'undefined') {
       data.page_size = data.size
@@ -100,7 +98,15 @@ export const cooperationRecordService = {
 
   // 根据ID获取合作商品详情
   getCooperationProductById: async (productId: number): Promise<CooperationProduct> => {
-    const response = await api.get(`/cooperation-records/products/${productId}`)
+    const response = await api.get(`/products/${productId}`)
+    return response.data
+  },
+
+  // 独立创建合作商品（不绑定记录）
+  createProduct: async (
+    data: CooperationProductCreate
+  ): Promise<CooperationProduct> => {
+    const response = await api.post('/products', data)
     return response.data
   },
 
@@ -114,20 +120,33 @@ export const cooperationRecordService = {
     if (end_date) params.end_date = end_date
     const response = await api.get('/cooperation-records/stats/overview', { params })
     return response.data
-  }
-  ,
+  },
   // 导入合作结果文件并匹配达人
-  importCooperationResults: async (file: File, similarityThreshold: number = 0.8): Promise<{
-    exact_success: Array<{ import_nickname: string; influencer_id: number; influencer_name: string; influencer_nickname: string }>
-    similar_possible_success: Array<{ import_nickname: string; influencer_id: number; influencer_name: string; influencer_nickname: string; similarity: number }>
+  importCooperationResults: async (
+    file: File,
+    similarityThreshold: number = 0.8
+  ): Promise<{
+    exact_success: Array<{
+      import_nickname: string
+      influencer_id: number
+      influencer_name: string
+      influencer_nickname: string
+    }>
+    similar_possible_success: Array<{
+      import_nickname: string
+      influencer_id: number
+      influencer_name: string
+      influencer_nickname: string
+      similarity: number
+    }>
     unmatched: Array<{ import_nickname: string }>
   }> => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('similarity_threshold', String(similarityThreshold))
     const response = await api.post('/cooperation-records/import-results', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
-  }
+  },
 }
