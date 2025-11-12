@@ -57,20 +57,30 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
 
   const getContactResultColor = (result: string) => {
     const colors = {
-      successful: 'green',
-      failed: 'red',
-      pending: 'orange',
-      no_response: 'gray'
+      wechat_added: 'blue',
+      email_sent: 'green',
+      invited: 'green',
+      goods_list_sent: 'orange',
+      intent_pending_quote: 'pink',
+      quoted: 'gold',
+      group_joined: 'cyan',
+      cooperation_shot: 'purple',
+      contact_failed: 'gray'
     }
     return colors[result as keyof typeof colors] || 'default'
   }
 
   const getContactResultText = (result: string) => {
     const texts = {
-      successful: '成功',
-      failed: '失败',
-      pending: '待回复',
-      no_response: '无回应'
+      wechat_added: '已加微信',
+      email_sent: '已发邮件',
+      invited: '已邀约',
+      goods_list_sent: '已建联发货盘',
+      intent_pending_quote: '有合作意向待提报',
+      quoted: '已提报',
+      group_joined: '已拉群',
+      cooperation_shot: '已拍单合作',
+      contact_failed: '建联未成功'
     }
     return texts[result as keyof typeof texts] || result
   }

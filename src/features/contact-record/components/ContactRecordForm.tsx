@@ -169,7 +169,7 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
       onFinish={handleSubmit}
       initialValues={{
         contact_type: 'initial',
-        contact_result: 'pending',
+        contact_result: 'wechat_added',
         follow_up_required: 'no',
         contact_date: dayjs()
       }}
@@ -288,14 +288,19 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
 
         <Form.Item
           name="contact_result"
-          label="联系结果"
-          rules={[{ required: true, message: '请选择联系结果' }]}
+          label="建联状态"
+          rules={[{ required: true, message: '请选择建联状态' }]}
         >
-          <Select placeholder="请选择联系结果">
-            <Option value="successful">成功</Option>
-            <Option value="failed">失败</Option>
-            <Option value="pending">待回复</Option>
-            <Option value="no_response">无回应</Option>
+          <Select placeholder="请选择建联状态">
+            <Option value="wechat_added">已加微信</Option>
+            <Option value="email_sent">已发邮件</Option>
+            <Option value="invited">已邀约</Option>
+            <Option value="goods_list_sent">已建联发货盘</Option>
+            <Option value="intent_pending_quote">有合作意向待提报</Option>
+            <Option value="quoted">已提报</Option>
+            <Option value="group_joined">已拉群</Option>
+            <Option value="cooperation_shot">已拍单合作</Option>
+            <Option value="contact_failed">建联未成功</Option>
           </Select>
         </Form.Item>
       </Card>

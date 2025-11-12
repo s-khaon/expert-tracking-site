@@ -17,7 +17,9 @@ import {
   Timeline,
   Typography,
   Divider,
-  AutoComplete
+  Popover,
+  Tooltip,
+  Drawer
 } from 'antd'
 import {
   PlusOutlined,
@@ -30,7 +32,8 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   UserOutlined,
-  MailOutlined
+  MailOutlined,
+  FilterOutlined
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { ContactRecord, ContactRecordSearchParams } from '@/types'
@@ -39,6 +42,8 @@ import { influencerService } from '@/services/influencerService'
 import ContactRecordForm from '@/features/contact-record/components/ContactRecordForm'
 import ContactRecordDetail from '@/features/contact-record/components/ContactRecordDetail'
 import CooperationRecordForm from '@/features/cooperation-record/components/CooperationRecordForm'
+import InfluencerDetail from '@/features/influencer/components/InfluencerDetail'
+import type { Influencer } from '@/types'
 
 const { RangePicker } = DatePicker
 const { Option } = Select
@@ -86,6 +91,10 @@ const ContactRecordManagement: React.FC = () => {
     pending_follow_up: 0
   })
 
+  const [timelineKey, setTimelineKey] = useState(0)
+  const [influencerDetailVisible, setInfluencerDetailVisible] = useState(false)
+  const [influencerDetail, setInfluencerDetail] = useState<Influencer | null>(null)
+
   // 合作记录创建弹窗
   const [cooperationFormVisible, setCooperationFormVisible] = useState(false)
   const [cooperationContext, setCooperationContext] = useState<{ influencer_id: number; contact_record_id: number } | null>(null)
@@ -115,24 +124,17 @@ const ContactRecordManagement: React.FC = () => {
 
   // 搜索达人（用于筛选）
   const searchInfluencers = async (search: string) => {
-    if (!search.trim()) {
-      setInfluencerOptions([])
-      return
-    }
-    
     try {
       setInfluencerSearchLoading(true)
       const response = await influencerService.getInfluencers({
         page: 1,
-        page_size: 20, // 限制搜索结果数量
-        search: search.trim()
+        page_size: 20,
+        search: (search || '').trim() || undefined
       })
-      
       const options = response.items.map(influencer => ({
         value: influencer.id,
-        label: `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`
+        label: `${influencer.nickname || influencer.name || 'ID: ' + influencer.id}`
       }))
-      
       setInfluencerOptions(options)
     } catch (error) {
       console.error('搜索达人失败', error)
@@ -140,6 +142,13 @@ const ContactRecordManagement: React.FC = () => {
     } finally {
       setInfluencerSearchLoading(false)
     }
+  }
+
+  const handleQuickFilterByInfluencer = (id: number) => {
+    const label = records.find(r => r.influencer_id === id)?.influencer?.nickname || `ID: ${id}`
+    ensureInfluencerOption(id, label)
+    setSearchParams(prev => ({ ...prev, influencer_id: id, page: 1 }))
+    fetchRecords({ page: 1 })
   }
 
   // 获取统计数据
@@ -188,6 +197,26 @@ const ContactRecordManagement: React.FC = () => {
   const handleView = (record: ContactRecord) => {
     setViewingRecord(record)
     setDetailVisible(true)
+  }
+
+  const ensureInfluencerOption = (id: number, label: string) => {
+    setInfluencerOptions(prev => {
+      if (prev.some(opt => opt.value === id)) return prev
+      return [{ value: id, label }, ...prev]
+    })
+  }
+
+  const openInfluencerDetail = async (id: number) => {
+    try {
+      const inf = await influencerService.getInfluencer(id)
+      setInfluencerDetail(inf)
+      setInfluencerDetailVisible(true)
+      ensureInfluencerOption(id, inf.nickname || inf.name || `ID: ${id}`)
+      setSearchParams(prev => ({ ...prev, influencer_id: id, page: 1 }))
+      fetchRecords({ page: 1 })
+    } catch {
+      setInfluencerDetailVisible(false)
+    }
   }
 
   const handleDelete = async (id: number) => {
@@ -263,20 +292,30 @@ const ContactRecordManagement: React.FC = () => {
 
   const getContactResultColor = (result: string) => {
     const colors = {
-      successful: 'green',
-      failed: 'red',
-      pending: 'orange',
-      no_response: 'gray'
+      wechat_added: 'blue',
+      email_sent: 'green',
+      invited: 'green',
+      goods_list_sent: 'orange',
+      intent_pending_quote: 'pink',
+      quoted: 'gold',
+      group_joined: 'cyan',
+      cooperation_shot: 'purple',
+      contact_failed: 'gray'
     }
     return colors[result as keyof typeof colors] || 'default'
   }
 
   const getContactResultText = (result: string) => {
     const texts = {
-      successful: '成功',
-      failed: '失败',
-      pending: '待回复',
-      no_response: '无回应'
+      wechat_added: '已加微信',
+      email_sent: '已发邮件',
+      invited: '已邀约',
+      goods_list_sent: '已建联发货盘',
+      intent_pending_quote: '有合作意向待提报',
+      quoted: '已提报',
+      group_joined: '已拉群',
+      cooperation_shot: '已拍单合作',
+      contact_failed: '建联未成功'
     }
     return texts[result as keyof typeof texts] || result
   }
@@ -285,29 +324,32 @@ const ContactRecordManagement: React.FC = () => {
       title: '达人',
       dataIndex: 'influencer_name',
       key: 'influencer_name',
-      width: 120,
-      render: (name: string, record: ContactRecord) => (
-        <Space>
-          <UserOutlined />
-          <Text>{name || `ID: ${record.influencer_id}`}</Text>
-        </Space>
-      )
-    },
-    {
-      title: '达人信息',
-      dataIndex: 'influencer',
-      key: 'influencer_info',
-      width: 200,
-      render: (_: any, record: ContactRecord) => {
+      width: 220,
+      render: (name: string, record: ContactRecord) => {
         const inf = record.influencer
-        return (
+        const brief = (
           <div>
-            <div><Text type="secondary">{inf?.nickname || '-'}</Text></div>
-            <Space size={4} wrap>
+            <div><Text strong>{inf?.nickname || inf?.name || name || `ID: ${record.influencer_id}`}</Text></div>
+            <Space size={4} style={{ marginTop: 8 }} wrap>
               {inf?.email && <Tag icon={<MailOutlined />} color="blue">{inf.email}</Tag>}
               {inf?.wechat && <Tag icon={<UserOutlined />} color="cyan">{inf.wechat}</Tag>}
             </Space>
+            <div style={{ marginTop: 8 }}>
+              <Button type="link" onClick={() => openInfluencerDetail(record.influencer_id)}>查看达人详情</Button>
+            </div>
           </div>
+        )
+        return (
+          <Space>
+            <Popover content={brief} title="达人简要" trigger="click">
+              <Space>
+                <UserOutlined />
+                <Button type="link" style={{ padding: 0 }}>
+                  {inf?.nickname || name || `ID: ${record.influencer_id}`}
+                </Button>
+              </Space>
+            </Popover>
+          </Space>
         )
       }
     },
@@ -372,10 +414,15 @@ const ContactRecordManagement: React.FC = () => {
         </Tag>
       ),
       filters: [
-        { text: '成功', value: 'successful' },
-        { text: '失败', value: 'failed' },
-        { text: '待回复', value: 'pending' },
-        { text: '无回应', value: 'no_response' }
+        { text: '已加微信', value: 'wechat_added' },
+        { text: '已发邮件', value: 'email_sent' },
+        { text: '已邀约', value: 'invited' },
+        { text: '已建联发货盘', value: 'goods_list_sent' },
+        { text: '有合作意向待提报', value: 'intent_pending_quote' },
+        { text: '已提报', value: 'quoted' },
+        { text: '已拉群', value: 'group_joined' },
+        { text: '已拍单合作', value: 'cooperation_shot' },
+        { text: '建联未成功', value: 'contact_failed' }
       ]
     },
     {
@@ -419,42 +466,44 @@ const ContactRecordManagement: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 200,
+      width: 170,
       fixed: 'right',
       render: (_, record: ContactRecord) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-          >
-            查看
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => handleCreateCooperationRecord(record)}
-          >
-            创建合作记录
-          </Button>
-          {record.follow_up_required === 'yes' && (
+        <Space size="small" wrap>
+          <Tooltip title="查看">
             <Button
-              type="link"
+              type="text"
               size="small"
-              icon={<CheckCircleOutlined />}
-              onClick={() => handleMarkFollowUpComplete(record.id)}
+              icon={<EyeOutlined />}
+              onClick={() => handleView(record)}
+            />
+          </Tooltip>
+          <Tooltip title="编辑">
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="创建合作记录">
+            <Button
+              type="text"
+              size="small"
+              onClick={() => handleCreateCooperationRecord(record)}
             >
-              完成跟进
+              创建
             </Button>
+          </Tooltip>
+          {record.follow_up_required === 'yes' && (
+            <Tooltip title="完成跟进">
+              <Button
+                type="text"
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleMarkFollowUpComplete(record.id)}
+              />
+            </Tooltip>
           )}
           <Popconfirm
             title="确定要删除这条记录吗？"
@@ -462,14 +511,14 @@ const ContactRecordManagement: React.FC = () => {
             okText="确定"
             cancelText="取消"
           >
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-            >
-              删除
-            </Button>
+            <Tooltip title="删除">
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+              />
+            </Tooltip>
           </Popconfirm>
         </Space>
       )
@@ -480,20 +529,38 @@ const ContactRecordManagement: React.FC = () => {
     const sortedRecords = [...records].sort((a, b) => 
       (b.contact_date ? new Date(b.contact_date).getTime() : 0) - (a.contact_date ? new Date(a.contact_date).getTime() : 0)
     )
-
-    return (
-      <Timeline>
-        {sortedRecords.map((record) => (
-          <Timeline.Item
-            key={record.id}
-            color={record.contact_result ? getContactResultColor(record.contact_result) : 'default'}
-          >
-            <Card size="small" style={{ marginBottom: 8 }}>
+    const items = sortedRecords.map((record) => ({
+      color: record.contact_result ? getContactResultColor(record.contact_result) : 'default',
+      children: (
+        <Card size="small" style={{ marginBottom: 8 }}>
               <Row gutter={16}>
                 <Col span={12}>
                   <Space>
                     <UserOutlined />
-                    <Text strong>{record.influencer_name || `达人ID: ${record.influencer_id}`}</Text>
+                    <Popover
+                      title="达人简要"
+                      content={(
+                        <div>
+                          <div><Text strong>{record.influencer?.nickname || record.influencer?.name || record.influencer_name || `ID: ${record.influencer_id}`}</Text></div>
+                          <Space size={4} style={{ marginTop: 8 }} wrap>
+                            {record.influencer?.email && <Tag icon={<MailOutlined />} color="blue">{record.influencer.email}</Tag>}
+                            {record.influencer?.wechat && <Tag icon={<UserOutlined />} color="cyan">{record.influencer.wechat}</Tag>}
+                          </Space>
+                          <div style={{ marginTop: 8 }}>
+                            <Button type="link" onClick={() => openInfluencerDetail(record.influencer_id)}>查看达人详情</Button>
+                            <Button type="dashed" size="small" icon={<FilterOutlined />} onClick={() => handleQuickFilterByInfluencer(record.influencer_id)} style={{ marginLeft: 8 }}>仅看此人</Button>
+                          </div>
+                        </div>
+                      )}
+                      trigger="click"
+                    >
+                      <Space>
+                        <Button type="link" style={{ padding: 0 }}>
+                          {record.influencer?.nickname || record.influencer_name || `达人ID: ${record.influencer_id}`}
+                        </Button>
+                        <Button type="dashed" size="small" icon={<FilterOutlined />} onClick={() => handleQuickFilterByInfluencer(record.influencer_id)}>仅看此人</Button>
+                      </Space>
+                    </Popover>
                   </Space>
                 </Col>
                 <Col span={12} style={{ textAlign: 'right' }}>
@@ -561,14 +628,13 @@ const ContactRecordManagement: React.FC = () => {
                   >
                     编辑
                   </Button>
-                <Button onClick={handleSyncFromFeishu} loading={loading}>从飞书同步</Button>
-            </Space>
+                </Space>
               </div>
             </Card>
-          </Timeline.Item>
-        ))}
-      </Timeline>
-    )
+      )
+    }))
+
+    return <Timeline items={items} />
   }
 
   return (
@@ -629,7 +695,8 @@ const ContactRecordManagement: React.FC = () => {
             />
           </Col>
           <Col span={4}>
-            <AutoComplete
+            <Select
+              showSearch
               placeholder="搜索达人"
               allowClear
               value={searchParams.influencer_id}
@@ -659,16 +726,21 @@ const ContactRecordManagement: React.FC = () => {
           </Col>
           <Col span={4}>
             <Select
-              placeholder="联系结果"
+              placeholder="建联状态"
               allowClear
               value={searchParams.contact_result}
               onChange={(value) => setSearchParams(prev => ({ ...prev, contact_result: value }))}
               style={{ width: '100%' }}
             >
-              <Option value="successful">成功</Option>
-              <Option value="failed">失败</Option>
-              <Option value="pending">待回复</Option>
-              <Option value="no_response">无回应</Option>
+              <Option value="wechat_added">已加微信</Option>
+              <Option value="email_sent">已发邮件</Option>
+              <Option value="invited">已邀约</Option>
+              <Option value="goods_list_sent">已建联发货盘</Option>
+              <Option value="intent_pending_quote">有合作意向待提报</Option>
+              <Option value="quoted">已提报</Option>
+              <Option value="group_joined">已拉群</Option>
+              <Option value="cooperation_shot">已拍单合作</Option>
+              <Option value="contact_failed">建联未成功</Option>
             </Select>
           </Col>
           <Col span={6}>
@@ -733,7 +805,7 @@ const ContactRecordManagement: React.FC = () => {
           </Button>
           <Button
             icon={<EyeOutlined />}
-            onClick={() => setTimelineVisible(!timelineVisible)}
+            onClick={() => { setTimelineVisible(!timelineVisible); setTimelineKey(k => k + 1) }}
           >
             {timelineVisible ? '表格视图' : '时间线视图'}
           </Button>
@@ -750,7 +822,26 @@ const ContactRecordManagement: React.FC = () => {
       {/* 数据展示区域 */}
       <Card>
         {timelineVisible ? (
-          <div style={{ maxHeight: 600, overflow: 'auto' }}>
+          <div key={timelineKey} style={{ maxHeight: 600, overflow: 'auto' }}>
+            <Row gutter={16} style={{ marginBottom: 12 }}>
+              <Col span={6}>
+                <Select
+                  showSearch
+                  placeholder="只看指定达人"
+                  allowClear
+                  value={searchParams.influencer_id}
+                  onChange={(value) => setSearchParams(prev => ({ ...prev, influencer_id: value }))}
+                  onSearch={searchInfluencers}
+                  options={influencerOptions}
+                  style={{ width: '100%' }}
+                  filterOption={false}
+                  notFoundContent={influencerSearchLoading ? '搜索中...' : '暂无数据'}
+                />
+              </Col>
+              <Col>
+                <Button type="primary" onClick={() => fetchRecords({ page: 1 })}>应用筛选</Button>
+              </Col>
+            </Row>
             {renderTimeline()}
           </div>
         ) : (
@@ -841,6 +932,23 @@ const ContactRecordManagement: React.FC = () => {
           />
         )}
       </Modal>
+
+      <Drawer
+        title="达人详情"
+        placement="right"
+        width={600}
+        open={influencerDetailVisible}
+        onClose={() => setInfluencerDetailVisible(false)}
+        destroyOnHidden
+      >
+        {influencerDetail && (
+          <InfluencerDetail
+            influencer={influencerDetail}
+            onEdit={() => setInfluencerDetailVisible(false)}
+            onClose={() => setInfluencerDetailVisible(false)}
+          />
+        )}
+      </Drawer>
     </div>
   )
 }
