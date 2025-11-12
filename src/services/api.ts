@@ -54,6 +54,10 @@ api.interceptors.response.use(
     const { logout, token, updateToken } = useAuthStore.getState()
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      const url: string = originalRequest?.url || ''
+      if (url.includes('/auth/login')) {
+        return Promise.reject(error)
+      }
       if (isRefreshing) {
         // 如果正在刷新token，将请求加入队列
         return new Promise((resolve, reject) => {
@@ -103,7 +107,7 @@ api.interceptors.response.use(
 
     // 只对非401错误显示错误消息
     if (error.response?.status !== 401) {
-      const errorMessage = error.response?.data?.message || error.message || '请求失败'
+      const errorMessage = error.response?.data?.message || error.response?.data?.detail || error.message || '请求失败'
       message.error(errorMessage)
     }
 

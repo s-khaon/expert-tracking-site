@@ -29,7 +29,8 @@ import {
   ReloadOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  UserOutlined
+  UserOutlined,
+  MailOutlined
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { ContactRecord, ContactRecordSearchParams } from '@/types'
@@ -291,6 +292,24 @@ const ContactRecordManagement: React.FC = () => {
           <Text>{name || `ID: ${record.influencer_id}`}</Text>
         </Space>
       )
+    },
+    {
+      title: '达人信息',
+      dataIndex: 'influencer',
+      key: 'influencer_info',
+      width: 200,
+      render: (_: any, record: ContactRecord) => {
+        const inf = record.influencer
+        return (
+          <div>
+            <div><Text type="secondary">{inf?.nickname || '-'}</Text></div>
+            <Space size={4} wrap>
+              {inf?.email && <Tag icon={<MailOutlined />} color="blue">{inf.email}</Tag>}
+              {inf?.wechat && <Tag icon={<UserOutlined />} color="cyan">{inf.wechat}</Tag>}
+            </Space>
+          </div>
+        )
+      }
     },
     {
       title: '联系时间',
@@ -827,5 +846,3 @@ const ContactRecordManagement: React.FC = () => {
 }
 
 export default ContactRecordManagement
-
-

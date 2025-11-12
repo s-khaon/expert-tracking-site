@@ -110,6 +110,19 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
               {contactRecord.influencer_name || `达人ID: ${contactRecord.influencer_id}`}
             </Text>
           </Descriptions.Item>
+          {contactRecord.influencer && (
+            <>
+              <Descriptions.Item label="昵称/网名">
+                {contactRecord.influencer.nickname || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="邮箱">
+                {contactRecord.influencer.email || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="微信号">
+                {contactRecord.influencer.wechat || '-'}
+              </Descriptions.Item>
+            </>
+          )}
           <Descriptions.Item label="联系时间">
             {contactRecord.contact_date ? new Date(contactRecord.contact_date).toLocaleString() : '未设置'}
           </Descriptions.Item>

@@ -77,7 +77,7 @@ const InfluencerForm: React.FC<InfluencerFormProps> = ({
       onFinish={handleSubmit}
       initialValues={{
         is_refund: false,
-        platforms: []
+        platforms: [{}]
       }}
     >
       <Card title="基本信息" size="small" style={{ marginBottom: 16 }}>

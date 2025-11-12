@@ -18,7 +18,8 @@ const Login = () => {
       navigate('/dashboard')
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || '登录失败')
+      const msg = error?.response?.data?.detail || error?.response?.data?.message || '登录失败'
+      message.error(msg)
     },
   })
 
