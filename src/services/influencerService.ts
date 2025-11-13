@@ -100,8 +100,7 @@ export const influencerService = {
   },
   // 从飞书同步达人信息（手动触发）
   syncFromFeishu: async (): Promise<{ message: string; added: number; updated: number; skipped: number }> => {
-    const response = await api.post('/influencers/sync/feishu')
+    const response = await api.post('/influencers/sync/feishu', undefined, { timeout: 60000 })
     return response.data
   }
 }
-

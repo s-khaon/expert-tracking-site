@@ -98,7 +98,7 @@ export const contactRecordService = {
   ,
   // 从飞书同步建联记录（手动触发）
   syncFromFeishu: async (): Promise<{ message: string; added: number; updated: number; skipped: number; unknown_influencer: number }> => {
-    const response = await api.post('/contact-records/sync/feishu')
+    const response = await api.post('/contact-records/sync/feishu', undefined, { timeout: 60000 })
     return response.data
   }
 }
