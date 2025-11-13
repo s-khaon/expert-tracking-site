@@ -381,6 +381,8 @@ export interface InfluencerSearchParams extends PaginationParams {
   xiaohongshu_id?: string
   has_wechat_shop?: boolean
   platform?: string
+  min_followers?: number
+  max_followers?: number
 }
 
 // 建联记录搜索参数

@@ -4,6 +4,8 @@ import {
   Button,
   Space,
   Input,
+  Select,
+  InputNumber,
   Card,
   Modal,
   message,
@@ -36,6 +38,7 @@ import InfluencerDetail from '@/features/influencer/components/InfluencerDetail'
 import ContactRecordList from '@/features/contact-record/components/ContactRecordList'
 
 const { Search } = Input
+const { Option } = Select
 const { Title } = Typography
 
 const InfluencerManagement: React.FC = () => {
@@ -393,6 +396,56 @@ const InfluencerManagement: React.FC = () => {
                 onSearch={handleSearch}
                 style={{ width: '100%' }}
               />
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Select
+                placeholder="所属平台"
+                allowClear
+                value={searchParams.platform}
+                onChange={(value) => setSearchParams(prev => ({ ...prev, platform: value || undefined, page: 1 }))}
+                style={{ width: '100%' }}
+              >
+                <Option value="douyin">抖音</Option>
+                <Option value="xiaohongshu">小红书</Option>
+                <Option value="wechat_channels">视频号</Option>
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Row gutter={8} align="middle">
+                <Col flex="80px">
+                  <InputNumber
+                    placeholder="粉丝最小"
+                    min={0}
+                    value={searchParams.min_followers}
+                    onChange={(value) => setSearchParams(prev => ({ ...prev, min_followers: value || undefined, page: 1 }))}
+                    style={{ width: '100%' }}
+                  />
+                </Col>
+                <Col>
+                  ~
+                </Col>
+                <Col flex="80px">
+                  <InputNumber
+                    placeholder="粉丝最大"
+                    min={0}
+                    value={searchParams.max_followers}
+                    onChange={(value) => setSearchParams(prev => ({ ...prev, max_followers: value || undefined, page: 1 }))}
+                    style={{ width: '100%' }}
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Select
+                placeholder="视频号橱窗"
+                allowClear
+                value={searchParams.has_wechat_shop}
+                onChange={(value) => setSearchParams(prev => ({ ...prev, has_wechat_shop: value as any, page: 1 }))}
+                style={{ width: '100%' }}
+              >
+                <Option value={true}>有橱窗</Option>
+                <Option value={false}>无橱窗</Option>
+              </Select>
             </Col>
           </Row>
         </div>
