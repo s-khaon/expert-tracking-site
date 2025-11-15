@@ -1,22 +1,14 @@
-import React from 'react'
-import {
-  Descriptions,
-  Card,
-  Tag,
-  Space,
-  Button,
-  Divider,
-  Typography
-} from 'antd'
-import {
-  UserOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  EditOutlined
-} from '@ant-design/icons'
 import type { ContactRecord } from '@/types'
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  EditOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  UserOutlined,
+} from '@ant-design/icons'
+import { Button, Card, Descriptions, Divider, Space, Tag, Typography } from 'antd'
+import React from 'react'
 
 const { Text, Paragraph } = Typography
 
@@ -29,7 +21,7 @@ interface ContactRecordDetailProps {
 const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
   contactRecord,
   onEdit,
-  onClose
+  onClose,
 }) => {
   const getContactTypeColor = (type: string) => {
     const colors = {
@@ -38,7 +30,7 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
       negotiation: 'purple',
       contract: 'green',
       cooperation: 'cyan',
-      maintenance: 'gold'
+      maintenance: 'gold',
     }
     return colors[type as keyof typeof colors] || 'default'
   }
@@ -50,12 +42,12 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
       negotiation: '商务洽谈',
       contract: '合同签署',
       cooperation: '合作执行',
-      maintenance: '关系维护'
+      maintenance: '关系维护',
     }
     return texts[type as keyof typeof texts] || type
   }
 
-  const getContactResultColor = (result: string) => {
+  const getcontactStatusColor = (result: string) => {
     const colors = {
       wechat_added: 'blue',
       email_sent: 'green',
@@ -65,12 +57,12 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
       quoted: 'gold',
       group_joined: 'cyan',
       cooperation_shot: 'purple',
-      contact_failed: 'gray'
+      contact_failed: 'gray',
     }
     return colors[result as keyof typeof colors] || 'default'
   }
 
-  const getContactResultText = (result: string) => {
+  const getcontactStatusText = (result: string) => {
     const texts = {
       wechat_added: '已加微信',
       email_sent: '已发邮件',
@@ -80,20 +72,20 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
       quoted: '已提报',
       group_joined: '已拉群',
       cooperation_shot: '已拍单合作',
-      contact_failed: '建联未成功'
+      contact_failed: '建联未成功',
     }
     return texts[result as keyof typeof texts] || result
   }
 
   const getContactMethodIcon = (method: string) => {
     const icons = {
-      '微信': <UserOutlined />,
-      '电话': <PhoneOutlined />,
-      '邮件': <MailOutlined />,
-      'QQ': <UserOutlined />,
-      '短信': <PhoneOutlined />,
-      '面谈': <UserOutlined />,
-      '视频通话': <PhoneOutlined />
+      微信: <UserOutlined />,
+      电话: <PhoneOutlined />,
+      邮件: <MailOutlined />,
+      QQ: <UserOutlined />,
+      短信: <PhoneOutlined />,
+      面谈: <UserOutlined />,
+      视频通话: <PhoneOutlined />,
     }
     return icons[method as keyof typeof icons] || <UserOutlined />
   }
@@ -112,8 +104,12 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
       {/* 基本信息卡片 */}
       <Card title="基本信息" style={{ marginBottom: 16 }}>
         <Descriptions column={2} size="small">
-          <Descriptions.Item 
-            label={<><UserOutlined /> 达人</>}
+          <Descriptions.Item
+            label={
+              <>
+                <UserOutlined /> 达人
+              </>
+            }
             span={2}
           >
             <Text strong>
@@ -134,27 +130,39 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
             </>
           )}
           <Descriptions.Item label="联系时间">
-            {contactRecord.contact_date ? new Date(contactRecord.contact_date).toLocaleString() : '未设置'}
+            {contactRecord.contact_date
+              ? new Date(contactRecord.contact_date).toLocaleString()
+              : '未设置'}
           </Descriptions.Item>
           <Descriptions.Item label="联系类型">
             <Tag color={getContactTypeColor(contactRecord.contact_type)}>
               {getContactTypeText(contactRecord.contact_type)}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item 
-            label={<>联系方式</>}
-          >
+          <Descriptions.Item label={<>联系方式</>}>
             <Space>
-              {contactRecord.contact_method ? getContactMethodIcon(contactRecord.contact_method) : <UserOutlined />}
+              {contactRecord.contact_method ? (
+                getContactMethodIcon(contactRecord.contact_method)
+              ) : (
+                <UserOutlined />
+              )}
               <Text>{contactRecord.contact_method || '-'}</Text>
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label="联系人">
             {contactRecord.contact_person || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="联系结果">
-            <Tag color={contactRecord.contact_result ? getContactResultColor(contactRecord.contact_result) : 'default'}>
-              {contactRecord.contact_result ? getContactResultText(contactRecord.contact_result) : '未设置'}
+          <Descriptions.Item label="建联状态">
+            <Tag
+              color={
+                contactRecord.contact_status
+                  ? getcontactStatusColor(contactRecord.contact_status)
+                  : 'default'
+              }
+            >
+              {contactRecord.contact_status
+                ? getcontactStatusText(contactRecord.contact_status)
+                : '未设置'}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="记录创建时间">
@@ -186,19 +194,16 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
                 已完成
               </Tag>
             ) : (
-              <Tag color="default">
-                无需跟进
-              </Tag>
+              <Tag color="default">无需跟进</Tag>
             )}
           </Descriptions.Item>
           <Descriptions.Item label="跟进日期">
-            {contactRecord.follow_up_date ? 
-              new Date(contactRecord.follow_up_date).toLocaleString() : 
-              '-'
-            }
+            {contactRecord.follow_up_date
+              ? new Date(contactRecord.follow_up_date).toLocaleString()
+              : '-'}
           </Descriptions.Item>
         </Descriptions>
-        
+
         {contactRecord.follow_up_notes && (
           <>
             <Divider />
@@ -216,7 +221,11 @@ const ContactRecordDetail: React.FC<ContactRecordDetailProps> = ({
       <Card title="时间信息" size="small">
         <Descriptions column={1} size="small">
           <Descriptions.Item label="联系时间">
-            <Text code>{contactRecord.contact_date ? new Date(contactRecord.contact_date).toLocaleString() : '未设置'}</Text>
+            <Text code>
+              {contactRecord.contact_date
+                ? new Date(contactRecord.contact_date).toLocaleString()
+                : '未设置'}
+            </Text>
           </Descriptions.Item>
           {contactRecord.follow_up_date && (
             <Descriptions.Item label="计划跟进时间">

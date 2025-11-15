@@ -333,7 +333,7 @@ export interface ContactRecord {
   contact_method?: string
   contact_person?: string
   contact_content?: string
-  contact_result?: string
+  contact_status?: string
   follow_up_required: string
   follow_up_date?: string
   follow_up_notes?: string
@@ -351,7 +351,7 @@ export interface ContactRecordCreate {
   contact_method?: string
   contact_person?: string
   contact_content?: string
-  contact_result?: string
+  contact_status?: string
   follow_up_required?: string
   follow_up_date?: string
   follow_up_notes?: string
@@ -363,7 +363,7 @@ export interface ContactRecordUpdate {
   contact_method?: string
   contact_person?: string
   contact_content?: string
-  contact_result?: string
+  contact_status?: string
   follow_up_required?: string
   follow_up_date?: string
   follow_up_notes?: string
@@ -389,7 +389,7 @@ export interface InfluencerSearchParams extends PaginationParams {
 export interface ContactRecordSearchParams extends PaginationParams {
   influencer_id?: number
   contact_type?: string
-  contact_result?: string
+  contact_status?: string
   follow_up_required?: string
   start_date?: string
   end_date?: string

@@ -1,29 +1,29 @@
-import React, { useState, useEffect } from 'react'
+import { contactRecordService } from '@/services/contactRecordService'
+import type { ContactRecord, ContactRecordSearchParams } from '@/types'
 import {
-  Table,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  PlusOutlined,
+} from '@ant-design/icons'
+import {
   Button,
-  Space,
-  Tag,
-  Modal,
-  message,
-  Popconfirm,
   Card,
+  Col,
+  Divider,
+  message,
+  Modal,
+  Popconfirm,
+  Row,
+  Space,
+  Table,
+  Tag,
   Timeline,
   Typography,
-  Divider,
-  Row,
-  Col
 } from 'antd'
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined
-} from '@ant-design/icons'
-import type { ContactRecord, ContactRecordSearchParams } from '@/types'
-import { contactRecordService } from '@/services/contactRecordService'
+import React, { useEffect, useState } from 'react'
 import ContactRecordForm from './ContactRecordForm'
 
 const { Text } = Typography
@@ -39,7 +39,7 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
   influencerId,
   visible,
   onClose,
-  showAsModal = true
+  showAsModal = true,
 }) => {
   const [records, setRecords] = useState<ContactRecord[]>([])
   const [loading, setLoading] = useState(false)
@@ -49,24 +49,21 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
-    total: 0
+    total: 0,
   })
 
   const fetchRecords = async (params?: Partial<ContactRecordSearchParams>) => {
     try {
       setLoading(true)
-      const response = await contactRecordService.getContactRecordsByInfluencer(
-        influencerId,
-        {
-          page: pagination.current,
-          page_size: pagination.pageSize,
-          ...params
-        }
-      )
+      const response = await contactRecordService.getContactRecordsByInfluencer(influencerId, {
+        page: pagination.current,
+        page_size: pagination.pageSize,
+        ...params,
+      })
       setRecords(response.items)
       setPagination(prev => ({
         ...prev,
-        total: response.total
+        total: response.total,
       }))
     } catch (error) {
       message.error('获取建联记录失败')
@@ -124,7 +121,7 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
       negotiation: 'purple',
       contract: 'green',
       cooperation: 'cyan',
-      maintenance: 'gold'
+      maintenance: 'gold',
     }
     return colors[type as keyof typeof colors] || 'default'
   }
@@ -136,27 +133,27 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
       negotiation: '商务洽谈',
       contract: '合同签署',
       cooperation: '合作执行',
-      maintenance: '关系维护'
+      maintenance: '关系维护',
     }
     return texts[type as keyof typeof texts] || type
   }
 
-  const getContactResultColor = (result: string) => {
+  const getcontactStatusColor = (result: string) => {
     const colors = {
       successful: 'green',
       failed: 'red',
       pending: 'orange',
-      no_response: 'gray'
+      no_response: 'gray',
     }
     return colors[result as keyof typeof colors] || 'default'
   }
 
-  const getContactResultText = (result: string) => {
+  const getcontactStatusText = (result: string) => {
     const texts = {
       successful: '成功',
       failed: '失败',
       pending: '待回复',
-      no_response: '无回应'
+      no_response: '无回应',
     }
     return texts[result as keyof typeof texts] || result
   }
@@ -167,7 +164,7 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
       dataIndex: 'contact_date',
       key: 'contact_date',
       width: 120,
-      render: (date: string) => new Date(date).toLocaleDateString()
+      render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
       title: '联系类型',
@@ -175,22 +172,20 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
       key: 'contact_type',
       width: 100,
       render: (type: string) => (
-        <Tag color={getContactTypeColor(type)}>
-          {getContactTypeText(type)}
-        </Tag>
-      )
+        <Tag color={getContactTypeColor(type)}>{getContactTypeText(type)}</Tag>
+      ),
     },
     {
       title: '联系方式',
       dataIndex: 'contact_method',
       key: 'contact_method',
-      width: 100
+      width: 100,
     },
     {
       title: '联系人',
       dataIndex: 'contact_person',
       key: 'contact_person',
-      width: 100
+      width: 100,
     },
     {
       title: '联系内容',
@@ -201,18 +196,16 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
         <Text ellipsis={{ tooltip: content }} style={{ maxWidth: 200 }}>
           {content}
         </Text>
-      )
+      ),
     },
     {
-      title: '联系结果',
-      dataIndex: 'contact_result',
-      key: 'contact_result',
+      title: '建联状态',
+      dataIndex: 'contact_status',
+      key: 'contact_status',
       width: 100,
       render: (result: string) => (
-        <Tag color={getContactResultColor(result)}>
-          {getContactResultText(result)}
-        </Tag>
-      )
+        <Tag color={getcontactStatusColor(result)}>{getcontactStatusText(result)}</Tag>
+      ),
     },
     {
       title: '跟进状态',
@@ -233,12 +226,8 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
             </Tag>
           )
         }
-        return (
-          <Tag color="default">
-            无需跟进
-          </Tag>
-        )
-      }
+        return <Tag color="default">无需跟进</Tag>
+      },
     },
     {
       title: '操作',
@@ -270,44 +259,53 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
             okText="确定"
             cancelText="取消"
           >
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-            >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
               删除
             </Button>
           </Popconfirm>
         </Space>
-      )
-    }
+      ),
+    },
   ]
 
   const renderTimeline = () => {
-    const sortedRecords = [...records].sort((a, b) => 
-      (b.contact_date ? new Date(b.contact_date).getTime() : 0) - (a.contact_date ? new Date(a.contact_date).getTime() : 0)
+    const sortedRecords = [...records].sort(
+      (a, b) =>
+        (b.contact_date ? new Date(b.contact_date).getTime() : 0) -
+        (a.contact_date ? new Date(a.contact_date).getTime() : 0)
     )
 
     return (
       <Timeline>
-        {sortedRecords.map((record) => (
+        {sortedRecords.map(record => (
           <Timeline.Item
             key={record.id}
-            color={record.contact_result ? getContactResultColor(record.contact_result) : 'default'}
+            color={record.contact_status ? getcontactStatusColor(record.contact_status) : 'default'}
           >
             <Card size="small" style={{ marginBottom: 8 }}>
               <Row gutter={16}>
                 <Col span={12}>
-                  <Text strong>{record.contact_date ? new Date(record.contact_date).toLocaleString() : '未设置'}</Text>
+                  <Text strong>
+                    {record.contact_date
+                      ? new Date(record.contact_date).toLocaleString()
+                      : '未设置'}
+                  </Text>
                 </Col>
                 <Col span={12} style={{ textAlign: 'right' }}>
                   <Space>
                     <Tag color={getContactTypeColor(record.contact_type)}>
                       {getContactTypeText(record.contact_type)}
                     </Tag>
-                    <Tag color={record.contact_result ? getContactResultColor(record.contact_result) : 'default'}>
-                      {record.contact_result ? getContactResultText(record.contact_result) : '未设置'}
+                    <Tag
+                      color={
+                        record.contact_status
+                          ? getcontactStatusColor(record.contact_status)
+                          : 'default'
+                      }
+                    >
+                      {record.contact_status
+                        ? getcontactStatusText(record.contact_status)
+                        : '未设置'}
                     </Tag>
                   </Space>
                 </Col>
@@ -349,26 +347,17 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
     <>
       <div style={{ marginBottom: 16 }}>
         <Space>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
             新增记录
           </Button>
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => setTimelineVisible(!timelineVisible)}
-          >
+          <Button icon={<EyeOutlined />} onClick={() => setTimelineVisible(!timelineVisible)}>
             {timelineVisible ? '表格视图' : '时间线视图'}
           </Button>
         </Space>
       </div>
 
       {timelineVisible ? (
-        <div style={{ maxHeight: 600, overflow: 'auto' }}>
-          {renderTimeline()}
-        </div>
+        <div style={{ maxHeight: 600, overflow: 'auto' }}>{renderTimeline()}</div>
       ) : (
         <Table
           columns={columns}
@@ -381,14 +370,14 @@ const ContactRecordList: React.FC<ContactRecordListProps> = ({
             total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: total => `共 ${total} 条记录`,
             onChange: (page, pageSize) => {
               setPagination(prev => ({
                 ...prev,
                 current: page,
-                pageSize: pageSize || 10
+                pageSize: pageSize || 10,
               }))
-            }
+            },
           }}
           scroll={{ y: 400 }}
         />

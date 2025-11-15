@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from 'react'
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Button,
-  Space,
-  Row,
-  Col,
-  Card,
-  message,
-  AutoComplete
-} from 'antd'
-import type { ContactRecord, ContactRecordCreate, ContactRecordUpdate } from '@/types'
 import { contactRecordService } from '@/services/contactRecordService'
 import { influencerService } from '@/services/influencerService'
+import type { ContactRecord, ContactRecordCreate, ContactRecordUpdate } from '@/types'
+import {
+  AutoComplete,
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  message,
+  Row,
+  Select,
+  Space,
+} from 'antd'
 import dayjs from 'dayjs'
+import React, { useEffect, useState } from 'react'
 
 const { Option } = Select
 const { TextArea } = Input
@@ -31,11 +31,13 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
   contactRecord,
   influencerId,
   onSuccess,
-  onCancel
+  onCancel,
 }) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [influencerOptions, setInfluencerOptions] = useState<{ value: string; label: string, id: Number }[]>([])
+  const [influencerOptions, setInfluencerOptions] = useState<
+    { value: string; label: string; id: Number }[]
+  >([])
   const [influencerSearchLoading, setInfluencerSearchLoading] = useState(false)
 
   // 搜索达人
@@ -45,15 +47,15 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
       const response = await influencerService.getInfluencers({
         page: 1,
         page_size: 20, // 限制搜索结果数量
-        search: search?.trim() || '' // 使用空字符串而不是返回空数组
+        search: search?.trim() || '', // 使用空字符串而不是返回空数组
       })
-      
+
       const options = response.items.map(influencer => ({
         value: `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`,
         label: `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`,
-        id: influencer.id
+        id: influencer.id,
       }))
-      
+
       setInfluencerOptions(options)
     } catch (error) {
       console.error('搜索达人失败')
@@ -68,18 +70,20 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
     try {
       // 直接通过ID获取达人详情
       const influencer = await influencerService.getInfluencer(influencerId)
-      
+
       if (influencer) {
         const label = `${influencer.name} (${influencer.nickname || 'ID: ' + influencer.id})`
-        setInfluencerOptions([{
-          value: label,
-          label: label,
-          id: influencer.id
-        }])
+        setInfluencerOptions([
+          {
+            value: label,
+            label: label,
+            id: influencer.id,
+          },
+        ])
         // 设置表单显示值
-        form.setFieldsValue({ 
+        form.setFieldsValue({
           influencer_id: influencerId,
-          influencer_display: label 
+          influencer_display: label,
         })
       }
     } catch (error) {
@@ -89,22 +93,24 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
         const response = await influencerService.getInfluencers({
           page: 1,
           page_size: 20,
-          search: influencerId.toString()
+          search: influencerId.toString(),
         })
-        
+
         // 查找匹配的达人
         const matchedInfluencer = response.items.find(item => item.id === influencerId)
         if (matchedInfluencer) {
           const label = `${matchedInfluencer.name} (${matchedInfluencer.nickname || 'ID: ' + matchedInfluencer.id})`
-          setInfluencerOptions([{
-            value: label,
-            label: label,
-            id: matchedInfluencer.id
-          }])
+          setInfluencerOptions([
+            {
+              value: label,
+              label: label,
+              id: matchedInfluencer.id,
+            },
+          ])
           // 设置表单显示值
-          form.setFieldsValue({ 
+          form.setFieldsValue({
             influencer_id: influencerId,
-            influencer_display: label 
+            influencer_display: label,
           })
         }
       } catch (searchError) {
@@ -118,7 +124,9 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
       form.setFieldsValue({
         ...contactRecord,
         contact_date: contactRecord.contact_date ? dayjs(contactRecord.contact_date) : undefined,
-        follow_up_date: contactRecord.follow_up_date ? dayjs(contactRecord.follow_up_date) : undefined
+        follow_up_date: contactRecord.follow_up_date
+          ? dayjs(contactRecord.follow_up_date)
+          : undefined,
       })
       // 如果联系记录有达人ID，加载达人信息
       if (contactRecord.influencer_id) {
@@ -137,21 +145,28 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true)
-      
+
       const formData = {
         ...values,
-        contact_date: values.contact_date ? values.contact_date.format('YYYY-MM-DD HH:mm:ss') : undefined,
-        follow_up_date: values.follow_up_date ? values.follow_up_date.format('YYYY-MM-DD HH:mm:ss') : undefined
+        contact_date: values.contact_date
+          ? values.contact_date.format('YYYY-MM-DD HH:mm:ss')
+          : undefined,
+        follow_up_date: values.follow_up_date
+          ? values.follow_up_date.format('YYYY-MM-DD HH:mm:ss')
+          : undefined,
       }
 
       if (contactRecord) {
-        await contactRecordService.updateContactRecord(contactRecord.id, formData as ContactRecordUpdate)
+        await contactRecordService.updateContactRecord(
+          contactRecord.id,
+          formData as ContactRecordUpdate
+        )
         message.success('更新建联记录成功')
       } else {
         await contactRecordService.createContactRecord(formData as ContactRecordCreate)
         message.success('创建建联记录成功')
       }
-      
+
       onSuccess()
     } catch (error) {
       message.error(contactRecord ? '更新建联记录失败' : '创建建联记录失败')
@@ -160,8 +175,6 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
     }
   }
 
-
-
   return (
     <Form
       form={form}
@@ -169,9 +182,9 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
       onFinish={handleSubmit}
       initialValues={{
         contact_type: 'initial',
-        contact_result: 'wechat_added',
+        contact_status: 'wechat_added',
         follow_up_required: 'no',
-        contact_date: dayjs()
+        contact_date: dayjs(),
       }}
     >
       <Card title="基本信息" size="small" style={{ marginBottom: 16 }}>
@@ -190,9 +203,9 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
                   // 从option中获取实际的ID
                   const selectedOption = influencerOptions.find(opt => opt.value === value)
                   if (selectedOption && 'id' in selectedOption) {
-                    form.setFieldsValue({ 
+                    form.setFieldsValue({
                       influencer_id: (selectedOption as any).id,
-                      influencer_display: value 
+                      influencer_display: value,
                     })
                   }
                 }}
@@ -245,11 +258,7 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
               label="联系方式"
               rules={[{ required: true, message: '请输入联系方式' }]}
             >
-              <Select
-                placeholder="请选择或输入联系方式"
-                showSearch
-                allowClear
-              >
+              <Select placeholder="请选择或输入联系方式" showSearch allowClear>
                 <Option value="微信">微信</Option>
                 <Option value="电话">电话</Option>
                 <Option value="邮件">邮件</Option>
@@ -262,10 +271,7 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item
-              name="contact_person"
-              label="联系人"
-            >
+            <Form.Item name="contact_person" label="联系人">
               <Input placeholder="请输入联系人姓名" />
             </Form.Item>
           </Col>
@@ -278,16 +284,11 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
           label="联系内容"
           rules={[{ required: true, message: '请输入联系内容' }]}
         >
-          <TextArea
-            placeholder="请详细描述联系内容"
-            rows={4}
-            showCount
-            maxLength={100}
-          />
+          <TextArea placeholder="请详细描述联系内容" rows={4} showCount maxLength={100} />
         </Form.Item>
 
         <Form.Item
-          name="contact_result"
+          name="contact_status"
           label="建联状态"
           rules={[{ required: true, message: '请选择建联状态' }]}
         >
@@ -328,8 +329,8 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
               rules={[
                 ({ getFieldValue }) => ({
                   required: getFieldValue('follow_up_required') === 'yes',
-                  message: '需要跟进时必须设置跟进日期'
-                })
+                  message: '需要跟进时必须设置跟进日期',
+                }),
               ]}
             >
               <DatePicker
@@ -342,24 +343,14 @@ const ContactRecordForm: React.FC<ContactRecordFormProps> = ({
           </Col>
         </Row>
 
-        <Form.Item
-          name="follow_up_notes"
-          label="跟进备注"
-        >
-          <TextArea
-            placeholder="请输入跟进备注"
-            rows={3}
-            showCount
-            maxLength={500}
-          />
+        <Form.Item name="follow_up_notes" label="跟进备注">
+          <TextArea placeholder="请输入跟进备注" rows={3} showCount maxLength={500} />
         </Form.Item>
       </Card>
 
       <div style={{ textAlign: 'right' }}>
         <Space>
-          <Button onClick={onCancel}>
-            取消
-          </Button>
+          <Button onClick={onCancel}>取消</Button>
           <Button type="primary" htmlType="submit" loading={loading}>
             {contactRecord ? '更新' : '创建'}
           </Button>
