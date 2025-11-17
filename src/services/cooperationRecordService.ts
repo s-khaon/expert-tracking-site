@@ -18,7 +18,7 @@ export const cooperationRecordService = {
   getCooperationRecords: async (
     params?: CooperationRecordSearchParams
   ): Promise<CooperationRecordListResponse> => {
-    const response = await api.get('/cooperation-records/', { params })
+    const response = await api.get('/cooperation-records', { params })
     const data = response.data
     // 兼容后端可能的 size 字段
     if (data && typeof data.page_size === 'undefined' && typeof data.size !== 'undefined') {
@@ -103,9 +103,7 @@ export const cooperationRecordService = {
   },
 
   // 独立创建合作商品（不绑定记录）
-  createProduct: async (
-    data: CooperationProductCreate
-  ): Promise<CooperationProduct> => {
+  createProduct: async (data: CooperationProductCreate): Promise<CooperationProduct> => {
     const response = await api.post('/products', data)
     return response.data
   },
