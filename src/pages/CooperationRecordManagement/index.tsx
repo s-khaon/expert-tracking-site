@@ -56,6 +56,7 @@ const CooperationRecordManagement: React.FC = () => {
   const [viewingRecord, setViewingRecord] = useState<CooperationRecordDetail | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<any | null>(null)
+  const [downloadRemaining, setDownloadRemaining] = useState<string>('')
   const [cooperationContext, setCooperationContext] = useState<{ influencer_id: number } | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [introOpenId, setIntroOpenId] = useState<number | null>(null)
@@ -80,6 +81,26 @@ const CooperationRecordManagement: React.FC = () => {
       setImporting(false)
     }
   }
+
+  useEffect(() => {
+    let timer: number | undefined
+    const updateRemaining = () => {
+      try {
+        const exp = importResult?.expires_at ? new Date(importResult.expires_at).getTime() : 0
+        if (!exp) { setDownloadRemaining(''); return }
+        const now = Date.now()
+        const diff = Math.max(0, Math.floor((exp - now) / 1000))
+        const mm = String(Math.floor(diff / 60)).padStart(2, '0')
+        const ss = String(diff % 60).padStart(2, '0')
+        setDownloadRemaining(`${mm}:${ss}`)
+      } catch { setDownloadRemaining('') }
+    }
+    if (importResult?.expires_at) {
+      updateRemaining()
+      timer = window.setInterval(updateRemaining, 1000)
+    }
+    return () => { if (timer) window.clearInterval(timer) }
+  }, [importResult?.expires_at])
 
   const fetchRecords = async () => {
     try {
@@ -365,6 +386,18 @@ const CooperationRecordManagement: React.FC = () => {
       >
         {importResult && (
           <div>
+            {importResult.download_url && (
+              <div style={{ marginBottom: 12 }}>
+                <Space>
+                  <Button type="primary" onClick={() => window.open(importResult.download_url, '_blank')}>
+                    下载标记文件（有效3分钟）
+                  </Button>
+                  {downloadRemaining && (
+                    <Typography.Text type="secondary">剩余 {downloadRemaining}</Typography.Text>
+                  )}
+                </Space>
+              </div>
+            )}
             <Typography.Title level={5}>成功匹配</Typography.Title>
             <ul>
               {importResult.exact_success.map((it: any, idx: number) => (

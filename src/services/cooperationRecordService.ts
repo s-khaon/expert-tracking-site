@@ -138,6 +138,8 @@ export const cooperationRecordService = {
       similarity: number
     }>
     unmatched: Array<{ import_nickname: string }>
+    download_url?: string
+    expires_at?: string
   }> => {
     const formData = new FormData()
     formData.append('file', file)
