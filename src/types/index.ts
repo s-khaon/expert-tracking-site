@@ -442,6 +442,7 @@ export interface CooperationRecord {
 
 export interface CooperationRecordDetail extends CooperationRecord {
   influencer_name?: string
+  influencer_nickname?: string
   contact_record_type?: string
 }
 

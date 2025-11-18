@@ -2,6 +2,7 @@ import type {
   CooperationRecordDetail,
   CooperationRecordSearchParams,
   InfluencerSimple,
+  Influencer,
 } from '@/types'
 import { cooperationRecordService } from '@services/cooperationRecordService'
 import { influencerService } from '@services/influencerService'
@@ -18,8 +19,12 @@ import {
   Tag,
   Spin,
   message,
-  Typography
+  Typography,
+  Popover,
+  Drawer,
 } from 'antd'
+import InfluencerDetail from '@/features/influencer/components/InfluencerDetail'
+import { MailOutlined, UserOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import React, { useEffect, useRef, useState } from 'react'
@@ -52,6 +57,12 @@ const CooperationRecordManagement: React.FC = () => {
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<any | null>(null)
   const [cooperationContext, setCooperationContext] = useState<{ influencer_id: number } | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [introOpenId, setIntroOpenId] = useState<number | null>(null)
+  const [introLoading, setIntroLoading] = useState(false)
+  const [introDetail, setIntroDetail] = useState<Influencer | null>(null)
+  const [influencerDrawerVisible, setInfluencerDrawerVisible] = useState(false)
+  const [drawerInfluencer, setDrawerInfluencer] = useState<Influencer | null>(null)
 
 
   const handleImportResults = async (file: File) => {
@@ -160,6 +171,20 @@ const CooperationRecordManagement: React.FC = () => {
     form.resetFields(['search','influencer_id','cooperation_status','dateRange']) // 同步清空筛选区显示
   }
 
+  const handleSyncFeishu = async () => {
+    setSyncing(true)
+    try {
+      const r = await cooperationRecordService.syncFeishu()
+      message.success(`同步成功：新增${r.added}，更新${r.updated}，跳过${r.skipped}`)
+      await fetchRecords()
+    } catch (err) {
+      console.error(err)
+      message.error('同步失败，请稍后重试')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const handleCreate = () => {
     // 创建合作记录需先选择达人
     const selectedInfluencer = form.getFieldValue('influencer_id') ?? params.influencer_id // 修改校验逻辑
@@ -207,12 +232,83 @@ const CooperationRecordManagement: React.FC = () => {
     })
   }
 
+  const openIntro = async (record: CooperationRecordDetail, open: boolean) => {
+    if (!open) {
+      setIntroOpenId(null)
+      setIntroDetail(null)
+      return
+    }
+    setIntroOpenId(record.id)
+    setIntroLoading(true)
+    try {
+      const detail = await influencerService.getInfluencer(record.influencer_id)
+      setIntroDetail(detail)
+    } catch (err) {
+      console.error(err)
+      message.error('获取达人简介失败')
+    } finally {
+      setIntroLoading(false)
+    }
+  }
+
+  const openInfluencerDrawer = async (record: CooperationRecordDetail) => {
+    try {
+      setIntroOpenId(null)
+      const detail = await influencerService.getInfluencer(record.influencer_id)
+      setDrawerInfluencer(detail)
+      setInfluencerDrawerVisible(true)
+    } catch (err) {
+      console.error(err)
+      message.error('获取达人详情失败')
+    }
+  }
+
   const columns: ColumnsType<CooperationRecordDetail> = [
     {
       title: '达人',
-      dataIndex: 'influencer_name',
-      key: 'influencer_name',
-      render: (text, record) => text || record.influencer_id,
+      dataIndex: 'influencer_nickname',
+      key: 'influencer_nickname',
+      render: (_text, record) => (
+        <Popover
+          trigger="click"
+          open={introOpenId === record.id}
+          onOpenChange={(open) => openIntro(record, open)}
+          content={
+            introLoading ? (
+              <Spin size="small" />
+            ) : introDetail ? (
+              <div style={{ maxWidth: 320 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <strong>{introDetail.name}</strong>{introDetail.nickname ? `（${introDetail.nickname}）` : ''}
+                </div>
+                <Space size={4} style={{ marginTop: 8 }} wrap>
+                  {introDetail.email && (
+                    <Tag icon={<MailOutlined />} color="blue">{introDetail.email}</Tag>
+                  )}
+                  {introDetail.wechat && (
+                    <Tag icon={<UserOutlined />} color="cyan">{introDetail.wechat}</Tag>
+                  )}
+                </Space>
+                <div style={{ color: '#666', marginTop: 8 }}>
+                  简介：{introDetail.description || '暂无'}
+                </div>
+                <div style={{ color: '#666', marginTop: 4 }}>
+                  备注：{introDetail.internal_notes || '暂无'}
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <Button type="link" onClick={() => openInfluencerDrawer(record)}>详情</Button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ maxWidth: 320 }}>暂无简介</div>
+            )
+          }
+        >
+          <Typography.Link>
+            {record.influencer_nickname || record.influencer_name || '-'}
+          </Typography.Link>
+        </Popover>
+      ),
     },
     {
       title: '合作状态',
@@ -394,11 +490,14 @@ const CooperationRecordManagement: React.FC = () => {
               <Button type="dashed" onClick={handleCreate}>
                 新增合作记录
               </Button>
-          <Button
-            onClick={() => document.getElementById("import-coop-file")?.click()}
-            loading={importing}
-          >
-            导入合作结果
+              <Button type="primary" loading={syncing} onClick={handleSyncFeishu}>
+                从飞书同步
+              </Button>
+              <Button
+                onClick={() => document.getElementById("import-coop-file")?.click()}
+                loading={importing}
+              >
+                导入合作结果
           </Button>
           <input id="import-coop-file" type="file" accept=".xlsx" style={{ display: 'none' }} onChange={(e) => {
             const f = e.target.files?.[0]
@@ -424,6 +523,27 @@ const CooperationRecordManagement: React.FC = () => {
           }}
         />
       </Card>
+      <Drawer
+        title="达人详情"
+        placement="right"
+        width={720}
+        open={influencerDrawerVisible}
+        onClose={() => {
+          setInfluencerDrawerVisible(false)
+          setDrawerInfluencer(null)
+        }}
+      >
+        {drawerInfluencer && (
+          <InfluencerDetail
+            influencer={drawerInfluencer}
+            onEdit={() => setInfluencerDrawerVisible(false)}
+            onClose={() => {
+              setInfluencerDrawerVisible(false)
+              setDrawerInfluencer(null)
+            }}
+          />
+        )}
+      </Drawer>
     </Space>
   )
 }

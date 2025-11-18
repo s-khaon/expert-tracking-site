@@ -147,4 +147,9 @@ export const cooperationRecordService = {
     })
     return response.data
   },
+  // 从飞书同步合作记录
+  syncFeishu: async (): Promise<{ added: number; updated: number; skipped: number }> => {
+    const response = await api.post('/cooperation-records/sync/feishu')
+    return response.data
+  },
 }
